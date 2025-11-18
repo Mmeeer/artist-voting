@@ -31,7 +31,6 @@ const artistSchema = new mongoose.Schema({
 const votingSessionSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true, index: true },
   title: { type: String, required: true },
-  date: { type: String, required: true },
   artists: {
     hosts: [artistSchema],
     singers: [artistSchema],
@@ -141,7 +140,6 @@ app.get('/api/voting/:companyId', async (req, res) => {
       active: true,
       id: currentVoting.id,
       title: currentVoting.title,
-      date: currentVoting.date,
       artists: currentVoting.artists,
       totalVotes,
       companyVotes,
@@ -328,7 +326,6 @@ app.get('/api/results/:votingSessionId', async (req, res) => {
     res.json({
       active: votingSession.isActive,
       title: votingSession.title,
-      date: votingSession.date,
       results: formattedResults,
       totalVotes: allVotes.length
     });
@@ -422,7 +419,6 @@ app.get('/api/results/:votingSessionId/company/:companyId', async (req, res) => 
     res.json({
       active: votingSession.isActive,
       title: votingSession.title,
-      date: votingSession.date,
       company: company.name,
       results: formattedResults,
       totalVotes: companyVotes.length
@@ -513,9 +509,9 @@ app.delete('/api/admin/companies/:companyId', authenticateAdmin, async (req, res
 // Create global voting session
 app.post('/api/admin/create-voting', authenticateAdmin, async (req, res) => {
   try {
-    const { title, date, artists } = req.body;
+    const { title, artists } = req.body;
 
-    if (!title || !date || !artists) {
+    if (!title || !artists) {
       return res.status(400).json({ message: 'Invalid voting session data' });
     }
 
@@ -553,7 +549,6 @@ app.post('/api/admin/create-voting', authenticateAdmin, async (req, res) => {
     const newVoting = new VotingSession({
       id: crypto.randomBytes(16).toString('hex'),
       title,
-      date,
       artists: {
         hosts: artists.hosts,
         singers: artists.singers,

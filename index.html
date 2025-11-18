@@ -199,6 +199,16 @@
         display: none;
       }
 
+      .warning-message {
+        background: rgba(255, 165, 0, 0.2);
+        border: 2px solid #ffa500;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        text-align: center;
+        color: #ffa500;
+      }
+
       .loading {
         text-align: center;
         padding: 60px;
@@ -334,13 +344,14 @@
           <div class="show-info">
             <div class="show-title" id="eventTitle"></div>
             <div class="show-details">
-              <div>📅 <span id="eventDate"></span></div>
               <div>🏢 <span id="companyName"></span></div>
               <div class="vote-counter">
                 📊 <span id="totalVotes">0</span> votes cast
               </div>
             </div>
           </div>
+
+          <div id="cooldownMessage" class="warning-message" style="display: none"></div>
 
           <div class="error-message" id="errorMessage"></div>
 
@@ -405,9 +416,9 @@
             Your vote has been successfully submitted. We're excited to plan an
             amazing celebration!
           </p>
-          <button class="vote-again-btn" onclick="submitAnother()">
-            Submit Another Vote
-          </button>
+          <p style="font-size: 1em; color: #aaaaaa;">
+            You can vote again in <span id="cooldownTime">3 hours</span>
+          </p>
         </div>
       </div>
     </div>
@@ -420,6 +431,69 @@
       let selectedSingers = [];
       let selectedSanta = null;
       let selectedShow = null;
+
+      // Cookie management
+      function setCookie(name, value, hours) {
+        const date = new Date();
+        date.setTime(date.getTime() + hours * 60 * 60 * 1000);
+        const expires = "expires=" + date.toUTCString();
+        document.cookie = name + "=" + value + ";" + expires + ";path=/";
+      }
+
+      function getCookie(name) {
+        const nameEQ = name + "=";
+        const ca = document.cookie.split(";");
+        for (let i = 0; i < ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) === " ") c = c.substring(1, c.length);
+          if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+        }
+        return null;
+      }
+
+      function getDeviceId() {
+        let deviceId = getCookie("deviceId");
+        if (!deviceId) {
+          deviceId = Math.random().toString(36).substring(2) + Date.now().toString(36);
+          setCookie("deviceId", deviceId, 24 * 365); // 1 year
+        }
+        return deviceId;
+      }
+
+      function getCanVoteAgainAt() {
+        return getCookie("canVoteAgainAt");
+      }
+
+      function setCanVoteAgainAt(datetime) {
+        setCookie("canVoteAgainAt", datetime, 3);
+      }
+
+      function checkVotingCooldown() {
+        const canVoteAgainAt = getCanVoteAgainAt();
+        if (!canVoteAgainAt) return true;
+
+        const cooldownTime = new Date(canVoteAgainAt);
+        const now = new Date();
+
+        if (now < cooldownTime) {
+          const minutesLeft = Math.ceil((cooldownTime - now) / 1000 / 60);
+          const hoursLeft = Math.floor(minutesLeft / 60);
+          const minsLeft = minutesLeft % 60;
+          
+          const timeString = hoursLeft > 0 
+            ? `${hoursLeft} hour${hoursLeft > 1 ? 's' : ''} ${minsLeft} minute${minsLeft > 1 ? 's' : ''}`
+            : `${minsLeft} minute${minsLeft > 1 ? 's' : ''}`;
+
+          const cooldownMessage = document.getElementById("cooldownMessage");
+          cooldownMessage.textContent = `⏰ You can vote again in ${timeString}`;
+          cooldownMessage.style.display = "block";
+          
+          document.getElementById("votingForm").style.display = "none";
+          return false;
+        }
+
+        return true;
+      }
 
       function getQueryParam(param) {
         const urlParams = new URLSearchParams(window.location.search);
@@ -458,7 +532,6 @@
           currentVotingSession = data;
 
           document.getElementById("eventTitle").textContent = data.title;
-          document.getElementById("eventDate").textContent = data.date;
           document.getElementById("companyName").textContent = data.companyName;
           document.getElementById("totalVotes").textContent = data.totalVotes;
 
@@ -468,6 +541,9 @@
           populateArtists("showsGrid", data.artists.shows, "show");
 
           document.getElementById("votingActive").style.display = "block";
+          
+          // Check if user is in cooldown
+          checkVotingCooldown();
         } catch (error) {
           console.error("Error loading voting:", error);
           document.getElementById("loading").style.display = "none";
@@ -541,6 +617,12 @@
       async function submitVote(event) {
         event.preventDefault();
 
+        // Check cooldown before submitting
+        if (!checkVotingCooldown()) {
+          showError("You are still in cooldown period. Please wait before voting again.");
+          return;
+        }
+
         if (!selectedHost) {
           showError("Please select a host");
           return;
@@ -565,6 +647,8 @@
         const additionalRequest =
           document.getElementById("additionalRequest").value.trim();
 
+        const deviceId = getDeviceId();
+
         try {
           const response = await fetch(`${API_URL}/vote`, {
             method: "POST",
@@ -574,6 +658,7 @@
             body: JSON.stringify({
               companyId: currentCompanyId,
               votingSessionId: currentVotingSession.id,
+              deviceId: deviceId,
               votes: {
                 host: selectedHost,
                 singers: selectedSingers,
@@ -584,13 +669,18 @@
             }),
           });
 
+          const data = await response.json();
+
           if (response.ok) {
+            // Set cookie for 3 hours
+            const canVoteAgainAt = data.canVoteAgainAt || new Date(Date.now() + 3 * 60 * 60 * 1000);
+            setCanVoteAgainAt(canVoteAgainAt);
+
             document.getElementById("votingActive").style.display = "none";
             document.getElementById("successSection").style.display = "block";
             window.scrollTo({ top: 0, behavior: "smooth" });
           } else {
-            const error = await response.json();
-            showError(error.message || "Failed to submit vote");
+            showError(data.message || "Failed to submit vote");
             submitBtn.disabled = false;
             submitBtn.textContent = "🎊 Submit Your Vote";
           }
@@ -600,24 +690,6 @@
           submitBtn.disabled = false;
           submitBtn.textContent = "🎊 Submit Your Vote";
         }
-      }
-
-      function submitAnother() {
-        selectedHost = null;
-        selectedSingers = [];
-        selectedSanta = null;
-        selectedShow = null;
-
-        document
-          .querySelectorAll(".artist-card")
-          .forEach((card) => card.classList.remove("selected"));
-        document.getElementById("additionalRequest").value = "";
-        document.getElementById("submitBtn").disabled = false;
-        document.getElementById("submitBtn").textContent = "🎊 Submit Your Vote";
-
-        document.getElementById("successSection").style.display = "none";
-        document.getElementById("votingActive").style.display = "block";
-        window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
       function showError(message) {

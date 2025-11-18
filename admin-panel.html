@@ -401,11 +401,6 @@
           </div>
 
           <div class="form-group">
-            <label for="sessionDate">Event Date *</label>
-            <input type="date" id="sessionDate" required />
-          </div>
-
-          <div class="form-group">
             <label>Hosts * (Name and Image URL)</label>
             <div id="hostsInputs">
               <div class="artist-input-group">
@@ -624,7 +619,6 @@
               <div class="session-header">
                 <div class="session-info">
                   <h3>${session.title}</h3>
-                  <p>📅 ${session.date}</p>
                   <p>🎫 Session ID: ${session.id}</p>
                   <p>📊 Total Votes: ${data.totalVotes}</p>
                   <div style="margin-top: 10px;">
@@ -801,7 +795,6 @@
           e.preventDefault();
 
           const title = document.getElementById("sessionTitle").value;
-          const date = document.getElementById("sessionDate").value;
 
           const getArtists = (containerId) => {
             const inputs = document
@@ -834,7 +827,7 @@
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${getToken()}`,
               },
-              body: JSON.stringify({ title, date, artists }),
+              body: JSON.stringify({ title, artists }),
             });
 
             const data = await response.json();

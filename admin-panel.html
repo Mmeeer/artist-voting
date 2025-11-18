@@ -522,7 +522,7 @@
 
       async function loadStats() {
         try {
-          const response = await fetch(`${API_URL}/api/admin/stats`, {
+          const response = await fetch(`${API_URL}/admin/stats`, {
             headers: {
               Authorization: `Bearer ${getToken()}`,
             },
@@ -575,7 +575,7 @@
 
       async function loadCompanies() {
         try {
-          const response = await fetch(`${API_URL}/api/admin/companies`, {
+          const response = await fetch(`${API_URL}/admin/companies`, {
             headers: {
               Authorization: `Bearer ${getToken()}`,
             },
@@ -605,7 +605,7 @@
 
             // Get sessions for this company
             const sessionsResponse = await fetch(
-              `${API_URL}/api/admin/voting-sessions/${company.id}`,
+              `${API_URL}/admin/voting-sessions/${company.id}`,
               {
                 headers: {
                   Authorization: `Bearer ${getToken()}`,
@@ -724,7 +724,7 @@
           btn.textContent = "Creating...";
 
           try {
-            const response = await fetch(`${API_URL}/api/admin/create-company`, {
+            const response = await fetch(`${API_URL}/admin/create-company`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -785,7 +785,7 @@
           btn.textContent = "Creating...";
 
           try {
-            const response = await fetch(`${API_URL}/api/admin/create-voting`, {
+            const response = await fetch(`${API_URL}/admin/create-voting`, {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -826,7 +826,7 @@
 
         try {
           const response = await fetch(
-            `${API_URL}/api/admin/companies/${companyId}`,
+            `${API_URL}/admin/companies/${companyId}`,
             {
               method: "DELETE",
               headers: {
@@ -850,7 +850,7 @@
       async function toggleSession(sessionId, activate) {
         try {
           const response = await fetch(
-            `${API_URL}/api/admin/voting-sessions/${sessionId}/toggle`,
+            `${API_URL}/admin/voting-sessions/${sessionId}/toggle`,
             {
               method: "PATCH",
               headers: {
@@ -885,7 +885,7 @@
 
         try {
           const response = await fetch(
-            `${API_URL}/api/admin/reset-voting/${sessionId}`,
+            `${API_URL}/admin/reset-voting/${sessionId}`,
             {
               method: "POST",
               headers: {
@@ -909,7 +909,7 @@
       if (!token) {
         window.location.href = "admin-login.html";
       } else {
-        fetch(`${API_URL}/api/admin/verify`, {
+        fetch(`${API_URL}/admin/verify`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

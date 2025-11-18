@@ -443,7 +443,7 @@
 
         try {
           const response = await fetch(
-            `${API_URL}/api/voting/${currentCompanyId}`
+            `${API_URL}/voting/${currentCompanyId}`
           );
           const data = await response.json();
 
@@ -566,7 +566,7 @@
           document.getElementById("additionalRequest").value.trim();
 
         try {
-          const response = await fetch(`${API_URL}/api/vote`, {
+          const response = await fetch(`${API_URL}/vote`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",

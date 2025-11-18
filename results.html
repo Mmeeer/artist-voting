@@ -63,6 +63,18 @@
         align-items: center;
       }
 
+      .view-mode-badge {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(138, 43, 226, 0.2);
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        color: #ba68c8;
+        border: 2px solid #ba68c8;
+        font-weight: bold;
+      }
+
       .live-indicator {
         display: inline-flex;
         align-items: center;
@@ -287,6 +299,7 @@
         transition: all 0.3s ease;
         border: 2px solid rgba(255, 255, 255, 0.2);
         margin-top: 20px;
+        cursor: pointer;
       }
 
       .back-btn:hover {
@@ -335,8 +348,12 @@
           <div class="event-info">
             <div class="event-title" id="eventTitle"></div>
             <div class="event-details">
-              <div>📅 <span id="eventDate"></span></div>
-              <div>🏢 <span id="companyName"></span></div>
+              <div id="companyNameContainer" style="display: none;">
+                🏢 <span id="companyName"></span>
+              </div>
+              <div id="viewModeContainer" style="display: none;">
+                <span class="view-mode-badge" id="viewModeBadge"></span>
+              </div>
               <div>📊 <span id="totalVotes">0</span> total votes</div>
               <div class="live-indicator">
                 <span class="live-dot"></span>
@@ -380,7 +397,7 @@
           </div>
 
           <div style="text-align: center; margin-top: 40px">
-            <a href="#" class="back-btn" onclick="goBackToVoting()">← Back to Voting</a>
+            <button class="back-btn" onclick="goBackToVoting()">← Back to Voting</button>
           </div>
         </div>
       </div>
@@ -399,7 +416,7 @@
 
       function goBackToVoting() {
         if (companyId) {
-          window.location.href = `voting.html?companyId=${companyId}`;
+          window.location.href = `index.html?companyId=${companyId}`;
         } else {
           window.history.back();
         }
@@ -407,6 +424,7 @@
 
       async function loadResults() {
         votingSessionId = getQueryParam("sessionId");
+        companyId = getQueryParam("companyId");
 
         if (!votingSessionId) {
           document.getElementById("loading").style.display = "none";
@@ -420,9 +438,15 @@
         }
 
         try {
-          const response = await fetch(
-            `${API_URL}/results/${votingSessionId}`
-          );
+          // Determine which endpoint to use based on companyId presence
+          let endpoint;
+          if (companyId) {
+            endpoint = `${API_URL}/results/${votingSessionId}/company/${companyId}`;
+          } else {
+            endpoint = `${API_URL}/results/${votingSessionId}`;
+          }
+
+          const response = await fetch(endpoint);
           const data = await response.json();
 
           document.getElementById("loading").style.display = "none";
@@ -434,9 +458,26 @@
           }
 
           document.getElementById("eventTitle").textContent = data.title;
-          document.getElementById("eventDate").textContent = data.date;
-          document.getElementById("companyName").textContent = data.company;
           document.getElementById("totalVotes").textContent = data.totalVotes;
+
+          // Show company name if viewing company-specific results
+          if (data.company) {
+            document.getElementById("companyName").textContent = data.company;
+            document.getElementById("companyNameContainer").style.display = "block";
+            
+            // Show view mode badge
+            const viewModeBadge = document.getElementById("viewModeBadge");
+            viewModeBadge.textContent = "📍 Company View";
+            document.getElementById("viewModeContainer").style.display = "block";
+          } else {
+            // Show that this is global view
+            const viewModeBadge = document.getElementById("viewModeBadge");
+            viewModeBadge.textContent = "🌍 Global View";
+            viewModeBadge.style.background = "rgba(33, 150, 243, 0.2)";
+            viewModeBadge.style.borderColor = "#2196f3";
+            viewModeBadge.style.color = "#64b5f6";
+            document.getElementById("viewModeContainer").style.display = "block";
+          }
 
           displayCategoryResults(
             "hostsResults",

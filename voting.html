@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>New Year's Eve Event - Cast Your Vote</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        color: #ffffff;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .logo {
+        font-size: 2.5em;
+        font-weight: bold;
+        background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 10px;
+      }
+
+      .show-info {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 25px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+        border-left: 4px solid #ff6b35;
+      }
+
+      .show-title {
+        font-size: 1.8em;
+        margin-bottom: 10px;
+        color: #ff6b35;
+      }
+
+      .show-details {
+        font-size: 1.1em;
+        color: #aaaaaa;
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
+      }
+
+      .voting-section {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+      }
+
+      .section-title {
+        font-size: 1.8em;
+        margin-bottom: 10px;
+        color: #ff6b35;
+      }
+
+      .section-subtitle {
+        font-size: 1em;
+        color: #aaaaaa;
+        margin-bottom: 25px;
+      }
+
+      .artists-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .artist-card {
+        background: rgba(255, 255, 255, 0.08);
+        border: 3px solid transparent;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        position: relative;
+        user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .artist-card:hover {
+        border-color: #ff6b35;
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
+      }
+
+      .artist-card.selected {
+        border-color: #ff6b35;
+        background: rgba(255, 107, 53, 0.2);
+        box-shadow: 0 0 30px rgba(255, 107, 53, 0.5);
+      }
+
+      .artist-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .artist-name {
+        padding: 15px;
+        text-align: center;
+        font-size: 1.1em;
+        font-weight: 600;
+      }
+
+      .selection-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: #ff6b35;
+        color: white;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 1.2em;
+      }
+
+      .artist-card.selected .selection-badge {
+        display: flex;
+      }
+
+      .additional-request {
+        width: 100%;
+        min-height: 120px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        color: white;
+        font-size: 1em;
+        font-family: inherit;
+        resize: vertical;
+      }
+
+      .additional-request:focus {
+        outline: none;
+        border-color: #ff6b35;
+      }
+
+      .submit-btn {
+        width: 100%;
+        padding: 18px;
+        font-size: 1.3em;
+        background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: bold;
+        margin-top: 20px;
+      }
+
+      .submit-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(255, 107, 53, 0.5);
+      }
+
+      .submit-btn:disabled {
+        background: #555;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .error-message {
+        background: rgba(255, 0, 0, 0.2);
+        border: 2px solid #ff0000;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        text-align: center;
+        display: none;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 60px;
+        font-size: 1.3em;
+      }
+
+      .spinner {
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-left-color: #ff6b35;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 20px auto;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .no-voting {
+        text-align: center;
+        padding: 80px 20px;
+      }
+
+      .no-voting h2 {
+        font-size: 2.2em;
+        margin-bottom: 20px;
+        color: #ff6b35;
+      }
+
+      .no-voting p {
+        font-size: 1.2em;
+        color: #aaaaaa;
+        margin-bottom: 15px;
+      }
+
+      .success-section {
+        text-align: center;
+        padding: 80px 20px;
+        display: none;
+      }
+
+      .success-icon {
+        font-size: 100px;
+        margin-bottom: 30px;
+      }
+
+      .success-section h2 {
+        font-size: 2.5em;
+        margin-bottom: 20px;
+        color: #ff6b35;
+      }
+
+      .success-section p {
+        font-size: 1.3em;
+        color: #aaaaaa;
+        margin-bottom: 30px;
+      }
+
+      .vote-again-btn {
+        padding: 15px 40px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 1.1em;
+        transition: all 0.3s ease;
+      }
+
+      .vote-again-btn:hover {
+        background: rgba(255, 107, 53, 0.2);
+        border-color: #ff6b35;
+      }
+
+      .vote-counter {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 8px 15px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        color: #aaaaaa;
+      }
+
+      @media (max-width: 768px) {
+        .artists-grid {
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+          gap: 15px;
+        }
+
+        .artist-image {
+          height: 150px;
+        }
+
+        .logo {
+          font-size: 2em;
+        }
+
+        .show-title {
+          font-size: 1.5em;
+        }
+
+        .section-title {
+          font-size: 1.5em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="logo">🎉 NEW YEAR'S EVE</div>
+        <p style="color: #aaaaaa; font-size: 1.2em">
+          Help us plan the perfect celebration
+        </p>
+      </div>
+
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <p>Loading event details...</p>
+      </div>
+
+      <div id="content" style="display: none">
+        <div id="noVoting" class="no-voting" style="display: none">
+          <h2>No Active Voting Session</h2>
+          <p>There is currently no active voting session for your company.</p>
+          <p>Please check back later or contact your administrator.</p>
+        </div>
+
+        <div id="votingActive" style="display: none">
+          <div class="show-info">
+            <div class="show-title" id="eventTitle"></div>
+            <div class="show-details">
+              <div>📅 <span id="eventDate"></span></div>
+              <div>🏢 <span id="companyName"></span></div>
+              <div class="vote-counter">
+                📊 <span id="totalVotes">0</span> votes cast
+              </div>
+            </div>
+          </div>
+
+          <div class="error-message" id="errorMessage"></div>
+
+          <form id="votingForm">
+            <!-- Hosts -->
+            <div class="voting-section">
+              <div class="section-title">1. Select a Host</div>
+              <div class="section-subtitle">Choose one host for the evening</div>
+              <div class="artists-grid" id="hostsGrid"></div>
+            </div>
+
+            <!-- Singers -->
+            <div class="voting-section">
+              <div class="section-title">2. Select Singers or Bands</div>
+              <div class="section-subtitle">
+                Choose 1 or 2 musical acts (required)
+              </div>
+              <div class="artists-grid" id="singersGrid"></div>
+            </div>
+
+            <!-- Santas -->
+            <div class="voting-section">
+              <div class="section-title">3. Select a Santa</div>
+              <div class="section-subtitle">
+                Choose your preferred Santa style
+              </div>
+              <div class="artists-grid" id="santasGrid"></div>
+            </div>
+
+            <!-- Shows -->
+            <div class="voting-section">
+              <div class="section-title">4. Select an Entertainment Show</div>
+              <div class="section-subtitle">
+                Choose one show for the event
+              </div>
+              <div class="artists-grid" id="showsGrid"></div>
+            </div>
+
+            <!-- Additional Requests -->
+            <div class="voting-section">
+              <div class="section-title">5. Additional Requests</div>
+              <div class="section-subtitle">
+                Any special requests or suggestions (optional)
+              </div>
+              <textarea
+                id="additionalRequest"
+                class="additional-request"
+                placeholder="Share your ideas or special requests here..."
+              ></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn" id="submitBtn">
+              🎊 Submit Your Vote
+            </button>
+          </form>
+        </div>
+
+        <div id="successSection" class="success-section">
+          <div class="success-icon">✅</div>
+          <h2>Thank You!</h2>
+          <p>
+            Your vote has been successfully submitted. We're excited to plan an
+            amazing celebration!
+          </p>
+          <button class="vote-again-btn" onclick="submitAnother()">
+            Submit Another Vote
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:3000";
+      let currentCompanyId = "";
+      let currentVotingSession = null;
+      let selectedHost = null;
+      let selectedSingers = [];
+      let selectedSanta = null;
+      let selectedShow = null;
+
+      function getQueryParam(param) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(param);
+      }
+
+      async function loadVoting() {
+        currentCompanyId = getQueryParam("companyId");
+
+        if (!currentCompanyId) {
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("content").style.display = "block";
+          document.getElementById("noVoting").style.display = "block";
+          document.getElementById("noVoting").innerHTML = `
+            <h2>Invalid URL</h2>
+            <p>Company ID is missing from the URL.</p>
+            <p>Please use the correct link provided by your administrator.</p>
+          `;
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `${API_URL}/api/voting/${currentCompanyId}`
+          );
+          const data = await response.json();
+
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("content").style.display = "block";
+
+          if (!data.active) {
+            document.getElementById("noVoting").style.display = "block";
+            return;
+          }
+
+          currentVotingSession = data;
+
+          document.getElementById("eventTitle").textContent = data.title;
+          document.getElementById("eventDate").textContent = data.date;
+          document.getElementById("companyName").textContent = data.companyName;
+          document.getElementById("totalVotes").textContent = data.totalVotes;
+
+          populateArtists("hostsGrid", data.artists.hosts, "host");
+          populateArtists("singersGrid", data.artists.singers, "singer");
+          populateArtists("santasGrid", data.artists.santas, "santa");
+          populateArtists("showsGrid", data.artists.shows, "show");
+
+          document.getElementById("votingActive").style.display = "block";
+        } catch (error) {
+          console.error("Error loading voting:", error);
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("content").style.display = "block";
+          document.getElementById("noVoting").style.display = "block";
+          document.getElementById("noVoting").innerHTML = `
+            <h2>Error Loading Event</h2>
+            <p>Failed to load event details. Please try again later.</p>
+          `;
+        }
+      }
+
+      function populateArtists(gridId, artists, type) {
+        const grid = document.getElementById(gridId);
+        grid.innerHTML = "";
+
+        artists.forEach((artist, index) => {
+          const card = document.createElement("div");
+          card.className = "artist-card";
+          card.dataset.type = type;
+          card.dataset.name = artist.name;
+
+          card.innerHTML = `
+            <img src="${artist.imageUrl}" alt="${artist.name}" class="artist-image" onerror="this.src='https://via.placeholder.com/200x200?text=${encodeURIComponent(artist.name)}'">
+            <div class="artist-name">${artist.name}</div>
+            <div class="selection-badge">✓</div>
+          `;
+
+          card.addEventListener("click", () => selectArtist(card, type));
+
+          grid.appendChild(card);
+        });
+      }
+
+      function selectArtist(card, type) {
+        const artistName = card.dataset.name;
+
+        if (type === "host") {
+          document
+            .querySelectorAll('[data-type="host"]')
+            .forEach((c) => c.classList.remove("selected"));
+          card.classList.add("selected");
+          selectedHost = artistName;
+        } else if (type === "singer") {
+          if (card.classList.contains("selected")) {
+            card.classList.remove("selected");
+            selectedSingers = selectedSingers.filter((s) => s !== artistName);
+          } else {
+            if (selectedSingers.length >= 2) {
+              showError("You can select maximum 2 singers or bands");
+              return;
+            }
+            card.classList.add("selected");
+            selectedSingers.push(artistName);
+          }
+        } else if (type === "santa") {
+          document
+            .querySelectorAll('[data-type="santa"]')
+            .forEach((c) => c.classList.remove("selected"));
+          card.classList.add("selected");
+          selectedSanta = artistName;
+        } else if (type === "show") {
+          document
+            .querySelectorAll('[data-type="show"]')
+            .forEach((c) => c.classList.remove("selected"));
+          card.classList.add("selected");
+          selectedShow = artistName;
+        }
+      }
+
+      async function submitVote(event) {
+        event.preventDefault();
+
+        if (!selectedHost) {
+          showError("Please select a host");
+          return;
+        }
+        if (selectedSingers.length === 0 || selectedSingers.length > 2) {
+          showError("Please select 1 or 2 singers or bands");
+          return;
+        }
+        if (!selectedSanta) {
+          showError("Please select a Santa");
+          return;
+        }
+        if (!selectedShow) {
+          showError("Please select an entertainment show");
+          return;
+        }
+
+        const submitBtn = document.getElementById("submitBtn");
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Submitting...";
+
+        const additionalRequest =
+          document.getElementById("additionalRequest").value.trim();
+
+        try {
+          const response = await fetch(`${API_URL}/api/vote`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              companyId: currentCompanyId,
+              votingSessionId: currentVotingSession.id,
+              votes: {
+                host: selectedHost,
+                singers: selectedSingers,
+                santa: selectedSanta,
+                show: selectedShow,
+                additionalRequest: additionalRequest,
+              },
+            }),
+          });
+
+          if (response.ok) {
+            document.getElementById("votingActive").style.display = "none";
+            document.getElementById("successSection").style.display = "block";
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          } else {
+            const error = await response.json();
+            showError(error.message || "Failed to submit vote");
+            submitBtn.disabled = false;
+            submitBtn.textContent = "🎊 Submit Your Vote";
+          }
+        } catch (error) {
+          console.error("Error submitting vote:", error);
+          showError("Failed to submit vote. Please try again.");
+          submitBtn.disabled = false;
+          submitBtn.textContent = "🎊 Submit Your Vote";
+        }
+      }
+
+      function submitAnother() {
+        selectedHost = null;
+        selectedSingers = [];
+        selectedSanta = null;
+        selectedShow = null;
+
+        document
+          .querySelectorAll(".artist-card")
+          .forEach((card) => card.classList.remove("selected"));
+        document.getElementById("additionalRequest").value = "";
+        document.getElementById("submitBtn").disabled = false;
+        document.getElementById("submitBtn").textContent = "🎊 Submit Your Vote";
+
+        document.getElementById("successSection").style.display = "none";
+        document.getElementById("votingActive").style.display = "block";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      function showError(message) {
+        const errorDiv = document.getElementById("errorMessage");
+        errorDiv.textContent = message;
+        errorDiv.style.display = "block";
+        setTimeout(() => {
+          errorDiv.style.display = "none";
+        }, 5000);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      document.getElementById("votingForm").addEventListener("submit", submitVote);
+
+      loadVoting();
+    </script>
+  </body>
+</html>

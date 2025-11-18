@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login - NYE Voting</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        color: #ffffff;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .login-container {
+        max-width: 450px;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 50px;
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      }
+
+      .logo {
+        font-size: 2.5em;
+        font-weight: bold;
+        text-align: center;
+        background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 15px;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: #aaaaaa;
+        margin-bottom: 40px;
+        font-size: 1.2em;
+      }
+
+      .form-group {
+        margin-bottom: 25px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 10px;
+        color: #aaaaaa;
+        font-weight: 600;
+      }
+
+      input[type="password"] {
+        width: 100%;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+        color: white;
+        font-size: 1.1em;
+        transition: all 0.3s ease;
+      }
+
+      input[type="password"]:focus {
+        outline: none;
+        border-color: #ff6b35;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .login-btn {
+        width: 100%;
+        padding: 15px;
+        background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1.2em;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .login-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(255, 107, 53, 0.5);
+      }
+
+      .login-btn:disabled {
+        background: #555;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .error-message {
+        background: rgba(255, 0, 0, 0.2);
+        border: 2px solid #ff0000;
+        padding: 15px;
+        border-radius: 10px;
+        margin-bottom: 25px;
+        text-align: center;
+        display: none;
+        animation: shake 0.5s;
+      }
+
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        25% {
+          transform: translateX(-10px);
+        }
+        75% {
+          transform: translateX(10px);
+        }
+      }
+
+      .icon {
+        text-align: center;
+        font-size: 4em;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="login-container">
+      <div class="icon">🔐</div>
+      <div class="logo">ADMIN LOGIN</div>
+      <div class="subtitle">New Year's Eve Voting System</div>
+
+      <div class="error-message" id="errorMessage"></div>
+
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="password">Admin Password</label>
+          <input
+            type="password"
+            id="password"
+            placeholder="Enter your password"
+            required
+            autofocus
+          />
+        </div>
+        <button type="submit" class="login-btn" id="loginBtn">
+          Login to Dashboard
+        </button>
+      </form>
+    </div>
+
+    <script>
+      const API_URL = "http://localhost:3000";
+
+      function showError(message) {
+        const errorDiv = document.getElementById("errorMessage");
+        errorDiv.textContent = message;
+        errorDiv.style.display = "block";
+        setTimeout(() => {
+          errorDiv.style.display = "none";
+        }, 5000);
+      }
+
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const password = document.getElementById("password").value;
+          const loginBtn = document.getElementById("loginBtn");
+
+          loginBtn.disabled = true;
+          loginBtn.textContent = "Logging in...";
+
+          try {
+            const response = await fetch(`${API_URL}/api/admin/login`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ password }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              localStorage.setItem("adminToken", data.token);
+              window.location.href = "admin-panel.html";
+            } else {
+              showError(data.message || "Invalid password");
+              loginBtn.disabled = false;
+              loginBtn.textContent = "Login to Dashboard";
+              document.getElementById("password").value = "";
+            }
+          } catch (error) {
+            console.error("Error logging in:", error);
+            showError("Login failed. Please try again.");
+            loginBtn.disabled = false;
+            loginBtn.textContent = "Login to Dashboard";
+          }
+        });
+
+      const token = localStorage.getItem("adminToken");
+      if (token) {
+        fetch(`${API_URL}/api/admin/verify`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }).then((response) => {
+          if (response.ok) {
+            window.location.href = "admin-panel.html";
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

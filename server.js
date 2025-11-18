@@ -27,9 +27,9 @@ const artistSchema = new mongoose.Schema({
   imageUrl: { type: String, required: true }
 }, { _id: false });
 
+// Global voting session (only one active at a time)
 const votingSessionSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true, index: true },
-  companyId: { type: String, required: true, index: true },
   title: { type: String, required: true },
   date: { type: String, required: true },
   artists: {
@@ -53,7 +53,8 @@ const voteSchema = new mongoose.Schema({
     additionalRequest: { type: String, default: '' }
   },
   timestamp: { type: Date, default: Date.now },
-  ipAddress: { type: String }
+  ipAddress: { type: String },
+  deviceId: { type: String, index: true }
 });
 
 const Company = mongoose.model('Company', companySchema);
@@ -73,15 +74,16 @@ async function connectDB() {
   }
 }
 
-async function getCurrentVotingForCompany(companyId) {
-  return await VotingSession.findOne({ 
-    companyId, 
-    isActive: true 
-  }).sort({ createdAt: -1 });
+async function getCurrentVoting() {
+  return await VotingSession.findOne({ isActive: true }).sort({ createdAt: -1 });
 }
 
 async function getVoteCount(votingSessionId) {
   return await Vote.countDocuments({ votingSessionId });
+}
+
+async function getVoteCountByCompany(votingSessionId, companyId) {
+  return await Vote.countDocuments({ votingSessionId, companyId });
 }
 
 const adminTokens = new Set();
@@ -126,13 +128,14 @@ app.get('/api/voting/:companyId', async (req, res) => {
       return res.status(404).json({ message: 'Company not found' });
     }
 
-    const currentVoting = await getCurrentVotingForCompany(companyId);
+    const currentVoting = await getCurrentVoting();
 
     if (!currentVoting) {
       return res.json({ active: false });
     }
 
     const totalVotes = await getVoteCount(currentVoting.id);
+    const companyVotes = await getVoteCountByCompany(currentVoting.id, companyId);
 
     res.json({
       active: true,
@@ -141,6 +144,7 @@ app.get('/api/voting/:companyId', async (req, res) => {
       date: currentVoting.date,
       artists: currentVoting.artists,
       totalVotes,
+      companyVotes,
       companyName: company.name
     });
   } catch (error) {
@@ -151,7 +155,11 @@ app.get('/api/voting/:companyId', async (req, res) => {
 
 app.post('/api/vote', async (req, res) => {
   try {
-    const { companyId, votingSessionId, votes } = req.body;
+    const { companyId, votingSessionId, votes, deviceId } = req.body;
+
+    if (!deviceId) {
+      return res.status(400).json({ message: 'Device ID is required' });
+    }
 
     const company = await Company.findOne({ id: companyId });
     if (!company) {
@@ -159,13 +167,28 @@ app.post('/api/vote', async (req, res) => {
     }
 
     const votingSession = await VotingSession.findOne({ 
-      id: votingSessionId, 
-      companyId: companyId,
+      id: votingSessionId,
       isActive: true 
     });
 
     if (!votingSession) {
       return res.status(400).json({ message: 'Invalid or expired voting session' });
+    }
+
+    // Check if device has voted in the last 3 hours
+    const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    const recentVote = await Vote.findOne({
+      deviceId,
+      votingSessionId,
+      timestamp: { $gte: threeHoursAgo }
+    });
+
+    if (recentVote) {
+      const timeLeft = Math.ceil((recentVote.timestamp.getTime() + 3 * 60 * 60 * 1000 - Date.now()) / 1000 / 60);
+      return res.status(429).json({ 
+        message: `You can vote again in ${timeLeft} minutes`,
+        timeLeft 
+      });
     }
 
     if (!votes || typeof votes !== 'object') {
@@ -210,12 +233,17 @@ app.post('/api/vote', async (req, res) => {
         show: votes.show,
         additionalRequest
       },
-      ipAddress: req.ip || req.connection.remoteAddress
+      ipAddress: req.ip || req.connection.remoteAddress,
+      deviceId
     });
 
     await newVote.save();
 
-    res.json({ success: true, message: 'Vote submitted successfully' });
+    res.json({ 
+      success: true, 
+      message: 'Vote submitted successfully',
+      canVoteAgainAt: new Date(Date.now() + 3 * 60 * 60 * 1000)
+    });
   } catch (error) {
     console.error('Error submitting vote:', error);
     res.status(500).json({ message: 'Server error' });
@@ -297,7 +325,99 @@ app.get('/api/results/:votingSessionId', async (req, res) => {
       additionalRequests: results.additionalRequests
     };
 
-    const company = await Company.findOne({ id: votingSession.companyId });
+    res.json({
+      active: votingSession.isActive,
+      title: votingSession.title,
+      date: votingSession.date,
+      results: formattedResults,
+      totalVotes: allVotes.length
+    });
+  } catch (error) {
+    console.error('Error getting results:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get results by company
+app.get('/api/results/:votingSessionId/company/:companyId', async (req, res) => {
+  try {
+    const { votingSessionId, companyId } = req.params;
+    const votingSession = await VotingSession.findOne({ id: votingSessionId });
+
+    if (!votingSession) {
+      return res.status(404).json({ message: 'Voting session not found' });
+    }
+
+    const company = await Company.findOne({ id: companyId });
+    if (!company) {
+      return res.status(404).json({ message: 'Company not found' });
+    }
+
+    const companyVotes = await Vote.find({ votingSessionId, companyId });
+
+    const results = {
+      hosts: {},
+      singers: {},
+      santas: {},
+      shows: {},
+      additionalRequests: []
+    };
+
+    votingSession.artists.hosts.forEach(host => {
+      results.hosts[host.name] = { votes: 0, imageUrl: host.imageUrl };
+    });
+    votingSession.artists.singers.forEach(singer => {
+      results.singers[singer.name] = { votes: 0, imageUrl: singer.imageUrl };
+    });
+    votingSession.artists.santas.forEach(santa => {
+      results.santas[santa.name] = { votes: 0, imageUrl: santa.imageUrl };
+    });
+    votingSession.artists.shows.forEach(show => {
+      results.shows[show.name] = { votes: 0, imageUrl: show.imageUrl };
+    });
+
+    companyVotes.forEach(voteDoc => {
+      if (results.hosts[voteDoc.votes.host]) {
+        results.hosts[voteDoc.votes.host].votes++;
+      }
+      
+      voteDoc.votes.singers.forEach(singer => {
+        if (results.singers[singer]) {
+          results.singers[singer].votes++;
+        }
+      });
+
+      if (results.santas[voteDoc.votes.santa]) {
+        results.santas[voteDoc.votes.santa].votes++;
+      }
+
+      if (results.shows[voteDoc.votes.show]) {
+        results.shows[voteDoc.votes.show].votes++;
+      }
+
+      if (voteDoc.votes.additionalRequest) {
+        results.additionalRequests.push({
+          request: voteDoc.votes.additionalRequest,
+          timestamp: voteDoc.timestamp
+        });
+      }
+    });
+
+    const formattedResults = {
+      hosts: Object.entries(results.hosts)
+        .map(([name, data]) => ({ name, votes: data.votes, imageUrl: data.imageUrl }))
+        .sort((a, b) => b.votes - a.votes),
+      singers: Object.entries(results.singers)
+        .map(([name, data]) => ({ name, votes: data.votes, imageUrl: data.imageUrl }))
+        .sort((a, b) => b.votes - a.votes),
+      santas: Object.entries(results.santas)
+        .map(([name, data]) => ({ name, votes: data.votes, imageUrl: data.imageUrl }))
+        .sort((a, b) => b.votes - a.votes),
+      shows: Object.entries(results.shows)
+        .map(([name, data]) => ({ name, votes: data.votes, imageUrl: data.imageUrl }))
+        .sort((a, b) => b.votes - a.votes),
+      additionalRequests: results.additionalRequests
+    };
 
     res.json({
       active: votingSession.isActive,
@@ -305,10 +425,10 @@ app.get('/api/results/:votingSessionId', async (req, res) => {
       date: votingSession.date,
       company: company.name,
       results: formattedResults,
-      totalVotes: allVotes.length
+      totalVotes: companyVotes.length
     });
   } catch (error) {
-    console.error('Error getting results:', error);
+    console.error('Error getting company results:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -377,13 +497,12 @@ app.delete('/api/admin/companies/:companyId', authenticateAdmin, async (req, res
       return res.status(404).json({ message: 'Company not found' });
     }
 
-    await VotingSession.deleteMany({ companyId });
     await Vote.deleteMany({ companyId });
     await Company.deleteOne({ id: companyId });
 
     res.json({
       success: true,
-      message: 'Company and all related data deleted successfully'
+      message: 'Company and all related votes deleted successfully'
     });
   } catch (error) {
     console.error('Error deleting company:', error);
@@ -391,11 +510,12 @@ app.delete('/api/admin/companies/:companyId', authenticateAdmin, async (req, res
   }
 });
 
+// Create global voting session
 app.post('/api/admin/create-voting', authenticateAdmin, async (req, res) => {
   try {
-    const { companyId, title, date, artists } = req.body;
+    const { title, date, artists } = req.body;
 
-    if (!companyId || !title || !date || !artists) {
+    if (!title || !date || !artists) {
       return res.status(400).json({ message: 'Invalid voting session data' });
     }
 
@@ -427,16 +547,11 @@ app.post('/api/admin/create-voting', authenticateAdmin, async (req, res) => {
       }
     }
 
-    const company = await Company.findOne({ id: companyId });
-    if (!company) {
-      return res.status(404).json({ message: 'Company not found' });
-    }
-
-    await VotingSession.updateMany({ companyId }, { isActive: false });
+    // Deactivate all previous voting sessions
+    await VotingSession.updateMany({}, { isActive: false });
 
     const newVoting = new VotingSession({
       id: crypto.randomBytes(16).toString('hex'),
-      companyId,
       title,
       date,
       artists: {
@@ -452,7 +567,7 @@ app.post('/api/admin/create-voting', authenticateAdmin, async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Voting session created successfully',
+      message: 'Global voting session created successfully',
       voting: newVoting
     });
   } catch (error) {
@@ -461,18 +576,28 @@ app.post('/api/admin/create-voting', authenticateAdmin, async (req, res) => {
   }
 });
 
-app.get('/api/admin/voting-sessions/:companyId', authenticateAdmin, async (req, res) => {
+app.get('/api/admin/current-voting', authenticateAdmin, async (req, res) => {
   try {
-    const { companyId } = req.params;
-    const sessions = await VotingSession.find({ companyId }).sort({ createdAt: -1 });
-    res.json(sessions);
+    const currentVoting = await getCurrentVoting();
+
+    if (!currentVoting) {
+      return res.json({ active: false });
+    }
+
+    const totalVotes = await getVoteCount(currentVoting.id);
+
+    res.json({
+      active: true,
+      session: currentVoting,
+      totalVotes
+    });
   } catch (error) {
-    console.error('Error getting voting sessions:', error);
+    console.error('Error getting current voting:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
 
-app.patch('/api/admin/voting-sessions/:votingSessionId/toggle', authenticateAdmin, async (req, res) => {
+app.patch('/api/admin/voting/:votingSessionId/toggle', authenticateAdmin, async (req, res) => {
   try {
     const { votingSessionId } = req.params;
 
@@ -517,56 +642,19 @@ app.post('/api/admin/reset-voting/:votingSessionId', authenticateAdmin, async (r
   }
 });
 
-app.get('/api/admin/stats/:companyId', authenticateAdmin, async (req, res) => {
-  try {
-    const { companyId } = req.params;
-
-    const company = await Company.findOne({ id: companyId });
-    if (!company) {
-      return res.status(404).json({ message: 'Company not found' });
-    }
-
-    const currentVoting = await getCurrentVotingForCompany(companyId);
-
-    if (!currentVoting) {
-      return res.json({ 
-        active: false,
-        company: company.name
-      });
-    }
-
-    const totalVotes = await getVoteCount(currentVoting.id);
-    const recentVotes = await Vote.find({ votingSessionId: currentVoting.id })
-      .sort({ timestamp: -1 })
-      .limit(10);
-
-    res.json({
-      active: true,
-      company: company.name,
-      session: currentVoting,
-      totalVotes,
-      recentVotes
-    });
-  } catch (error) {
-    console.error('Error getting stats:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
 app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
   try {
     const companies = await Company.find();
+    const currentVoting = await getCurrentVoting();
     const stats = [];
 
+    if (!currentVoting) {
+      return res.json([]);
+    }
+
     for (const company of companies) {
-      const activeSessions = await VotingSession.countDocuments({ 
-        companyId: company.id, 
-        isActive: true 
-      });
-      const totalSessions = await VotingSession.countDocuments({ 
-        companyId: company.id 
-      });
-      const totalVotes = await Vote.countDocuments({ 
+      const companyVotes = await Vote.countDocuments({ 
+        votingSessionId: currentVoting.id,
         companyId: company.id 
       });
 
@@ -576,13 +664,17 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
           name: company.name,
           createdAt: company.createdAt
         },
-        activeSessions,
-        totalSessions,
-        totalVotes
+        votes: companyVotes
       });
     }
 
-    res.json(stats);
+    const totalVotes = await Vote.countDocuments({ votingSessionId: currentVoting.id });
+
+    res.json({
+      currentSession: currentVoting,
+      totalVotes,
+      companies: stats
+    });
   } catch (error) {
     console.error('Error getting all stats:', error);
     res.status(500).json({ message: 'Server error' });

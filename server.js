@@ -22,21 +22,30 @@ const companySchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
-const artistSchema = new mongoose.Schema({
+const optionSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  imageUrl: { type: String, required: true }
+  imageUrl: { type: String }
+}, { _id: false });
+
+const sectionSchema = new mongoose.Schema({
+  id: { type: String, required: true },
+  label: { type: String, required: true },
+  type: {
+    type: String,
+    required: true,
+    enum: ['single-select', 'multi-select', 'text-input']
+  },
+  required: { type: Boolean, default: true },
+  options: [optionSchema],
+  minSelections: { type: Number, default: 1 },
+  maxSelections: { type: Number, default: 1 }
 }, { _id: false });
 
 // Global voting session (only one active at a time)
 const votingSessionSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true, index: true },
   title: { type: String, required: true },
-  artists: {
-    hosts: [artistSchema],
-    singers: [artistSchema],
-    santas: [artistSchema],
-    shows: [artistSchema]
-  },
+  sections: [sectionSchema],
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now }
 });
@@ -44,13 +53,7 @@ const votingSessionSchema = new mongoose.Schema({
 const voteSchema = new mongoose.Schema({
   votingSessionId: { type: String, required: true, index: true },
   companyId: { type: String, required: true, index: true },
-  votes: {
-    host: { type: String, required: true },
-    singers: [{ type: String, required: true }],
-    santa: { type: String, required: true },
-    show: { type: String, required: true },
-    additionalRequest: { type: String, default: '' }
-  },
+  votes: { type: Map, of: mongoose.Schema.Types.Mixed },
   timestamp: { type: Date, default: Date.now },
   ipAddress: { type: String },
   deviceId: { type: String, index: true }
@@ -140,7 +143,7 @@ app.get('/api/voting/:companyId', async (req, res) => {
       active: true,
       id: currentVoting.id,
       title: currentVoting.title,
-      artists: currentVoting.artists,
+      sections: currentVoting.sections,
       totalVotes,
       companyVotes,
       companyName: company.name
@@ -164,9 +167,9 @@ app.post('/api/vote', async (req, res) => {
       return res.status(404).json({ message: 'Company not found' });
     }
 
-    const votingSession = await VotingSession.findOne({ 
+    const votingSession = await VotingSession.findOne({
       id: votingSessionId,
-      isActive: true 
+      isActive: true
     });
 
     if (!votingSession) {
@@ -183,9 +186,9 @@ app.post('/api/vote', async (req, res) => {
 
     if (recentVote) {
       const timeLeft = Math.ceil((recentVote.timestamp.getTime() + 3 * 60 * 60 * 1000 - Date.now()) / 1000 / 60);
-      return res.status(429).json({ 
+      return res.status(429).json({
         message: `You can vote again in ${timeLeft} minutes`,
-        timeLeft 
+        timeLeft
       });
     }
 
@@ -193,52 +196,82 @@ app.post('/api/vote', async (req, res) => {
       return res.status(400).json({ message: 'Invalid votes data' });
     }
 
-    const validHosts = votingSession.artists.hosts.map(h => h.name);
-    if (!votes.host || !validHosts.includes(votes.host)) {
-      return res.status(400).json({ message: 'Please select a valid host' });
-    }
+    // Validate votes against sections
+    for (const section of votingSession.sections) {
+      const voteValue = votes[section.id];
 
-    if (!votes.singers || !Array.isArray(votes.singers) || 
-        votes.singers.length === 0 || votes.singers.length > 2) {
-      return res.status(400).json({ message: 'Please select 1-2 singers or bands' });
-    }
-    const validSingers = votingSession.artists.singers.map(s => s.name);
-    for (const singer of votes.singers) {
-      if (!validSingers.includes(singer)) {
-        return res.status(400).json({ message: 'Invalid singer selected' });
+      // Check required sections
+      if (section.required) {
+        if (section.type === 'text-input') {
+          if (!voteValue || (typeof voteValue === 'string' && voteValue.trim() === '')) {
+            return res.status(400).json({
+              message: `Please provide a value for ${section.label}`
+            });
+          }
+        } else {
+          if (!voteValue || (Array.isArray(voteValue) && voteValue.length === 0)) {
+            return res.status(400).json({
+              message: `Please select at least one option for ${section.label}`
+            });
+          }
+        }
       }
-    }
 
-    const validSantas = votingSession.artists.santas.map(s => s.name);
-    if (!votes.santa || !validSantas.includes(votes.santa)) {
-      return res.status(400).json({ message: 'Please select a valid Santa' });
-    }
+      // Validate based on section type
+      if (section.type === 'single-select') {
+        if (voteValue) {
+          const validOptions = section.options.map(opt => opt.name);
+          if (!validOptions.includes(voteValue)) {
+            return res.status(400).json({
+              message: `Invalid option selected for ${section.label}`
+            });
+          }
+        }
+      } else if (section.type === 'multi-select') {
+        if (voteValue) {
+          if (!Array.isArray(voteValue)) {
+            return res.status(400).json({
+              message: `${section.label} must be an array`
+            });
+          }
 
-    const validShows = votingSession.artists.shows.map(s => s.name);
-    if (!votes.show || !validShows.includes(votes.show)) {
-      return res.status(400).json({ message: 'Please select a valid entertainment show' });
-    }
+          if (voteValue.length < section.minSelections) {
+            return res.status(400).json({
+              message: `Please select at least ${section.minSelections} option(s) for ${section.label}`
+            });
+          }
 
-    const additionalRequest = votes.additionalRequest || '';
+          if (voteValue.length > section.maxSelections) {
+            return res.status(400).json({
+              message: `Please select at most ${section.maxSelections} option(s) for ${section.label}`
+            });
+          }
+
+          const validOptions = section.options.map(opt => opt.name);
+          for (const option of voteValue) {
+            if (!validOptions.includes(option)) {
+              return res.status(400).json({
+                message: `Invalid option selected for ${section.label}`
+              });
+            }
+          }
+        }
+      }
+      // text-input type is already validated above for required check
+    }
 
     const newVote = new Vote({
       votingSessionId,
       companyId: companyId,
-      votes: {
-        host: votes.host,
-        singers: votes.singers,
-        santa: votes.santa,
-        show: votes.show,
-        additionalRequest
-      },
+      votes: votes,
       ipAddress: req.ip || req.connection.remoteAddress,
       deviceId
     });
 
     await newVote.save();
 
-    res.json({ 
-      success: true, 
+    res.json({
+      success: true,
       message: 'Vote submitted successfully',
       canVoteAgainAt: new Date(Date.now() + 3 * 60 * 60 * 1000)
     });
@@ -259,69 +292,86 @@ app.get('/api/results/:votingSessionId', async (req, res) => {
 
     const allVotes = await Vote.find({ votingSessionId });
 
-    const results = {
-      hosts: {},
-      singers: {},
-      santas: {},
-      shows: {},
-      additionalRequests: []
-    };
+    // Initialize results structure based on sections
+    const results = {};
 
-    votingSession.artists.hosts.forEach(host => {
-      results.hosts[host.name] = { votes: 0, imageUrl: host.imageUrl };
-    });
-    votingSession.artists.singers.forEach(singer => {
-      results.singers[singer.name] = { votes: 0, imageUrl: singer.imageUrl };
-    });
-    votingSession.artists.santas.forEach(santa => {
-      results.santas[santa.name] = { votes: 0, imageUrl: santa.imageUrl };
-    });
-    votingSession.artists.shows.forEach(show => {
-      results.shows[show.name] = { votes: 0, imageUrl: show.imageUrl };
-    });
+    votingSession.sections.forEach(section => {
+      if (section.type === 'text-input') {
+        results[section.id] = {
+          type: 'text-input',
+          label: section.label,
+          responses: []
+        };
+      } else {
+        results[section.id] = {
+          type: section.type,
+          label: section.label,
+          options: {}
+        };
 
-    allVotes.forEach(voteDoc => {
-      if (results.hosts[voteDoc.votes.host]) {
-        results.hosts[voteDoc.votes.host].votes++;
-      }
-      
-      voteDoc.votes.singers.forEach(singer => {
-        if (results.singers[singer]) {
-          results.singers[singer].votes++;
-        }
-      });
-
-      if (results.santas[voteDoc.votes.santa]) {
-        results.santas[voteDoc.votes.santa].votes++;
-      }
-
-      if (results.shows[voteDoc.votes.show]) {
-        results.shows[voteDoc.votes.show].votes++;
-      }
-
-      if (voteDoc.votes.additionalRequest) {
-        results.additionalRequests.push({
-          request: voteDoc.votes.additionalRequest,
-          timestamp: voteDoc.timestamp
+        section.options.forEach(option => {
+          results[section.id].options[option.name] = {
+            votes: 0,
+            imageUrl: option.imageUrl
+          };
         });
       }
     });
 
-    const formattedResults = {
-      hosts: Object.entries(results.hosts)
-        .map(([name, data]) => ({ name, votes: data.votes, imageUrl: data.imageUrl }))
-        .sort((a, b) => b.votes - a.votes),
-      singers: Object.entries(results.singers)
-        .map(([name, data]) => ({ name, votes: data.votes, imageUrl: data.imageUrl }))
-        .sort((a, b) => b.votes - a.votes),
-      santas: Object.entries(results.santas)
-        .map(([name, data]) => ({ name, votes: data.votes, imageUrl: data.imageUrl }))
-        .sort((a, b) => b.votes - a.votes),
-      shows: Object.entries(results.shows)
-        .map(([name, data]) => ({ name, votes: data.votes, imageUrl: data.imageUrl }))
-        .sort((a, b) => b.votes - a.votes),
-      additionalRequests: results.additionalRequests
-    };
+    // Count votes
+    allVotes.forEach(voteDoc => {
+      const voteData = voteDoc.votes instanceof Map ? Object.fromEntries(voteDoc.votes) : voteDoc.votes;
+
+      votingSession.sections.forEach(section => {
+        const sectionVote = voteData[section.id];
+
+        if (section.type === 'text-input') {
+          if (sectionVote && sectionVote.trim() !== '') {
+            results[section.id].responses.push({
+              response: sectionVote,
+              timestamp: voteDoc.timestamp
+            });
+          }
+        } else if (section.type === 'single-select') {
+          if (sectionVote && results[section.id].options[sectionVote]) {
+            results[section.id].options[sectionVote].votes++;
+          }
+        } else if (section.type === 'multi-select') {
+          if (Array.isArray(sectionVote)) {
+            sectionVote.forEach(option => {
+              if (results[section.id].options[option]) {
+                results[section.id].options[option].votes++;
+              }
+            });
+          }
+        }
+      });
+    });
+
+    // Format results
+    const formattedResults = {};
+
+    Object.entries(results).forEach(([sectionId, sectionData]) => {
+      if (sectionData.type === 'text-input') {
+        formattedResults[sectionId] = {
+          type: sectionData.type,
+          label: sectionData.label,
+          responses: sectionData.responses
+        };
+      } else {
+        formattedResults[sectionId] = {
+          type: sectionData.type,
+          label: sectionData.label,
+          options: Object.entries(sectionData.options)
+            .map(([name, data]) => ({
+              name,
+              votes: data.votes,
+              imageUrl: data.imageUrl
+            }))
+            .sort((a, b) => b.votes - a.votes)
+        };
+      }
+    });
 
     res.json({
       active: votingSession.isActive,
@@ -352,69 +402,86 @@ app.get('/api/results/:votingSessionId/company/:companyId', async (req, res) => 
 
     const companyVotes = await Vote.find({ votingSessionId, companyId });
 
-    const results = {
-      hosts: {},
-      singers: {},
-      santas: {},
-      shows: {},
-      additionalRequests: []
-    };
+    // Initialize results structure based on sections
+    const results = {};
 
-    votingSession.artists.hosts.forEach(host => {
-      results.hosts[host.name] = { votes: 0, imageUrl: host.imageUrl };
-    });
-    votingSession.artists.singers.forEach(singer => {
-      results.singers[singer.name] = { votes: 0, imageUrl: singer.imageUrl };
-    });
-    votingSession.artists.santas.forEach(santa => {
-      results.santas[santa.name] = { votes: 0, imageUrl: santa.imageUrl };
-    });
-    votingSession.artists.shows.forEach(show => {
-      results.shows[show.name] = { votes: 0, imageUrl: show.imageUrl };
-    });
+    votingSession.sections.forEach(section => {
+      if (section.type === 'text-input') {
+        results[section.id] = {
+          type: 'text-input',
+          label: section.label,
+          responses: []
+        };
+      } else {
+        results[section.id] = {
+          type: section.type,
+          label: section.label,
+          options: {}
+        };
 
-    companyVotes.forEach(voteDoc => {
-      if (results.hosts[voteDoc.votes.host]) {
-        results.hosts[voteDoc.votes.host].votes++;
-      }
-      
-      voteDoc.votes.singers.forEach(singer => {
-        if (results.singers[singer]) {
-          results.singers[singer].votes++;
-        }
-      });
-
-      if (results.santas[voteDoc.votes.santa]) {
-        results.santas[voteDoc.votes.santa].votes++;
-      }
-
-      if (results.shows[voteDoc.votes.show]) {
-        results.shows[voteDoc.votes.show].votes++;
-      }
-
-      if (voteDoc.votes.additionalRequest) {
-        results.additionalRequests.push({
-          request: voteDoc.votes.additionalRequest,
-          timestamp: voteDoc.timestamp
+        section.options.forEach(option => {
+          results[section.id].options[option.name] = {
+            votes: 0,
+            imageUrl: option.imageUrl
+          };
         });
       }
     });
 
-    const formattedResults = {
-      hosts: Object.entries(results.hosts)
-        .map(([name, data]) => ({ name, votes: data.votes, imageUrl: data.imageUrl }))
-        .sort((a, b) => b.votes - a.votes),
-      singers: Object.entries(results.singers)
-        .map(([name, data]) => ({ name, votes: data.votes, imageUrl: data.imageUrl }))
-        .sort((a, b) => b.votes - a.votes),
-      santas: Object.entries(results.santas)
-        .map(([name, data]) => ({ name, votes: data.votes, imageUrl: data.imageUrl }))
-        .sort((a, b) => b.votes - a.votes),
-      shows: Object.entries(results.shows)
-        .map(([name, data]) => ({ name, votes: data.votes, imageUrl: data.imageUrl }))
-        .sort((a, b) => b.votes - a.votes),
-      additionalRequests: results.additionalRequests
-    };
+    // Count votes
+    companyVotes.forEach(voteDoc => {
+      const voteData = voteDoc.votes instanceof Map ? Object.fromEntries(voteDoc.votes) : voteDoc.votes;
+
+      votingSession.sections.forEach(section => {
+        const sectionVote = voteData[section.id];
+
+        if (section.type === 'text-input') {
+          if (sectionVote && sectionVote.trim() !== '') {
+            results[section.id].responses.push({
+              response: sectionVote,
+              timestamp: voteDoc.timestamp
+            });
+          }
+        } else if (section.type === 'single-select') {
+          if (sectionVote && results[section.id].options[sectionVote]) {
+            results[section.id].options[sectionVote].votes++;
+          }
+        } else if (section.type === 'multi-select') {
+          if (Array.isArray(sectionVote)) {
+            sectionVote.forEach(option => {
+              if (results[section.id].options[option]) {
+                results[section.id].options[option].votes++;
+              }
+            });
+          }
+        }
+      });
+    });
+
+    // Format results
+    const formattedResults = {};
+
+    Object.entries(results).forEach(([sectionId, sectionData]) => {
+      if (sectionData.type === 'text-input') {
+        formattedResults[sectionId] = {
+          type: sectionData.type,
+          label: sectionData.label,
+          responses: sectionData.responses
+        };
+      } else {
+        formattedResults[sectionId] = {
+          type: sectionData.type,
+          label: sectionData.label,
+          options: Object.entries(sectionData.options)
+            .map(([name, data]) => ({
+              name,
+              votes: data.votes,
+              imageUrl: data.imageUrl
+            }))
+            .sort((a, b) => b.votes - a.votes)
+        };
+      }
+    });
 
     res.json({
       active: votingSession.isActive,
@@ -509,37 +576,55 @@ app.delete('/api/admin/companies/:companyId', authenticateAdmin, async (req, res
 // Create global voting session
 app.post('/api/admin/create-voting', authenticateAdmin, async (req, res) => {
   try {
-    const { title, artists } = req.body;
+    const { title, sections } = req.body;
 
-    if (!title || !artists) {
+    if (!title || !sections) {
       return res.status(400).json({ message: 'Invalid voting session data' });
     }
 
-    if (!artists.hosts || !Array.isArray(artists.hosts) || artists.hosts.length === 0 ||
-        !artists.singers || !Array.isArray(artists.singers) || artists.singers.length === 0 ||
-        !artists.santas || !Array.isArray(artists.santas) || artists.santas.length === 0 ||
-        !artists.shows || !Array.isArray(artists.shows) || artists.shows.length === 0) {
-      return res.status(400).json({ message: 'All artist categories must have at least one option' });
+    if (!Array.isArray(sections) || sections.length === 0) {
+      return res.status(400).json({ message: 'At least one section is required' });
     }
 
-    for (const host of artists.hosts) {
-      if (!host.name || !host.imageUrl) {
-        return res.status(400).json({ message: 'Each host must have name and imageUrl' });
+    // Validate sections
+    for (const section of sections) {
+      if (!section.id || !section.label || !section.type) {
+        return res.status(400).json({
+          message: 'Each section must have id, label, and type'
+        });
       }
-    }
-    for (const singer of artists.singers) {
-      if (!singer.name || !singer.imageUrl) {
-        return res.status(400).json({ message: 'Each singer must have name and imageUrl' });
+
+      if (!['single-select', 'multi-select', 'text-input'].includes(section.type)) {
+        return res.status(400).json({
+          message: 'Invalid section type. Must be single-select, multi-select, or text-input'
+        });
       }
-    }
-    for (const santa of artists.santas) {
-      if (!santa.name || !santa.imageUrl) {
-        return res.status(400).json({ message: 'Each santa must have name and imageUrl' });
+
+      // Validate options for select types
+      if (section.type === 'single-select' || section.type === 'multi-select') {
+        if (!section.options || !Array.isArray(section.options) || section.options.length === 0) {
+          return res.status(400).json({
+            message: `Section "${section.label}" must have at least one option`
+          });
+        }
+
+        for (const option of section.options) {
+          if (!option.name) {
+            return res.status(400).json({
+              message: `Each option in "${section.label}" must have a name`
+            });
+          }
+        }
       }
-    }
-    for (const show of artists.shows) {
-      if (!show.name || !show.imageUrl) {
-        return res.status(400).json({ message: 'Each show must have name and imageUrl' });
+
+      // Validate multi-select min/max
+      if (section.type === 'multi-select') {
+        if (section.minSelections && section.maxSelections &&
+            section.minSelections > section.maxSelections) {
+          return res.status(400).json({
+            message: `In section "${section.label}", minSelections cannot be greater than maxSelections`
+          });
+        }
       }
     }
 
@@ -549,12 +634,7 @@ app.post('/api/admin/create-voting', authenticateAdmin, async (req, res) => {
     const newVoting = new VotingSession({
       id: crypto.randomBytes(16).toString('hex'),
       title,
-      artists: {
-        hosts: artists.hosts,
-        singers: artists.singers,
-        santas: artists.santas,
-        shows: artists.shows
-      },
+      sections: sections,
       isActive: true
     });
 
@@ -648,9 +728,9 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
     }
 
     for (const company of companies) {
-      const companyVotes = await Vote.countDocuments({ 
+      const companyVotes = await Vote.countDocuments({
         votingSessionId: currentVoting.id,
-        companyId: company.id 
+        companyId: company.id
       });
 
       stats.push({

@@ -108,7 +108,9 @@
       }
 
       input[type="text"],
-      input[type="date"] {
+      input[type="number"],
+      select,
+      textarea {
         width: 100%;
         padding: 12px;
         background: rgba(255, 255, 255, 0.08);
@@ -118,23 +120,44 @@
         font-size: 1em;
       }
 
-      input:focus {
+      input:focus, select:focus, textarea:focus {
         outline: none;
         border-color: #ff6b35;
       }
 
-      .artist-input-group {
+      select option {
+        background: #2d2d2d;
+        color: white;
+      }
+
+      .section-builder {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .section-builder-header {
         display: flex;
-        gap: 10px;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 15px;
       }
 
-      .artist-input-group input {
-        flex: 1;
+      .section-builder-title {
+        font-size: 1.2em;
+        color: #ff8c5a;
       }
 
-      .artist-input-group input:first-child {
-        flex: 2;
+      .option-input-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .option-input-group input {
+        flex: 1;
       }
 
       .btn {
@@ -251,32 +274,38 @@
         border: 2px solid #ef4444;
       }
 
-      .artists-summary {
+      .sections-summary {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
         gap: 15px;
         margin-top: 20px;
       }
 
-      .artist-category {
+      .section-category {
         background: rgba(255, 255, 255, 0.05);
         padding: 15px;
         border-radius: 8px;
       }
 
-      .artist-category h5 {
+      .section-category h5 {
         color: #ff6b35;
         margin-bottom: 10px;
         font-size: 1em;
       }
 
-      .artist-category ul {
+      .section-category p {
+        font-size: 0.9em;
+        color: #aaaaaa;
+        margin-bottom: 5px;
+      }
+
+      .section-category ul {
         list-style: none;
         font-size: 0.9em;
         color: #aaaaaa;
       }
 
-      .artist-category li {
+      .section-category li {
         margin-bottom: 5px;
       }
 
@@ -340,6 +369,16 @@
         flex-wrap: wrap;
       }
 
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        width: auto;
+      }
+
       @media (max-width: 768px) {
         .stats-grid {
           grid-template-columns: 1fr;
@@ -357,7 +396,7 @@
       <div class="header">
         <div>
           <div class="logo">🎛️ ADMIN PANEL</div>
-          <p style="color: #aaaaaa">New Year's Eve Global Voting System</p>
+          <p style="color: #aaaaaa">Entertainment Voting System</p>
         </div>
         <button class="logout-btn" onclick="logout()">Logout</button>
       </div>
@@ -401,98 +440,10 @@
           </div>
 
           <div class="form-group">
-            <label>Hosts * (Name and Image URL)</label>
-            <div id="hostsInputs">
-              <div class="artist-input-group">
-                <input type="text" placeholder="Host name" required />
-                <input type="text" placeholder="Image URL" required />
-                <button
-                  type="button"
-                  class="btn btn-danger btn-small"
-                  onclick="this.parentElement.remove()"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-            <button
-              type="button"
-              class="btn btn-secondary btn-small"
-              onclick="addArtistInput('hostsInputs')"
-            >
-              + Add Host
-            </button>
-          </div>
-
-          <div class="form-group">
-            <label>Singers/Bands * (Name and Image URL)</label>
-            <div id="singersInputs">
-              <div class="artist-input-group">
-                <input type="text" placeholder="Singer/Band name" required />
-                <input type="text" placeholder="Image URL" required />
-                <button
-                  type="button"
-                  class="btn btn-danger btn-small"
-                  onclick="this.parentElement.remove()"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-            <button
-              type="button"
-              class="btn btn-secondary btn-small"
-              onclick="addArtistInput('singersInputs')"
-            >
-              + Add Singer/Band
-            </button>
-          </div>
-
-          <div class="form-group">
-            <label>Santas * (Name and Image URL)</label>
-            <div id="santasInputs">
-              <div class="artist-input-group">
-                <input type="text" placeholder="Santa name" required />
-                <input type="text" placeholder="Image URL" required />
-                <button
-                  type="button"
-                  class="btn btn-danger btn-small"
-                  onclick="this.parentElement.remove()"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-            <button
-              type="button"
-              class="btn btn-secondary btn-small"
-              onclick="addArtistInput('santasInputs')"
-            >
-              + Add Santa
-            </button>
-          </div>
-
-          <div class="form-group">
-            <label>Entertainment Shows * (Name and Image URL)</label>
-            <div id="showsInputs">
-              <div class="artist-input-group">
-                <input type="text" placeholder="Show name" required />
-                <input type="text" placeholder="Image URL" required />
-                <button
-                  type="button"
-                  class="btn btn-danger btn-small"
-                  onclick="this.parentElement.remove()"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
-            <button
-              type="button"
-              class="btn btn-secondary btn-small"
-              onclick="addArtistInput('showsInputs')"
-            >
-              + Add Show
+            <label>Sections</label>
+            <div id="sectionsContainer"></div>
+            <button type="button" class="btn btn-secondary btn-small" onclick="addSection()">
+              + Add Section
             </button>
           </div>
 
@@ -505,7 +456,7 @@
       <!-- Manage Companies -->
       <div class="section">
         <div class="section-title">Manage Companies</div>
-        
+
         <div style="margin-bottom: 30px;">
           <h3 style="color: #ff6b35; margin-bottom: 15px;">Add New Company</h3>
           <form id="createCompanyForm" style="display: flex; gap: 10px; align-items: end;">
@@ -528,6 +479,7 @@
 
     <script>
       const API_URL = "https://clapcomedyclub.mn/artist/api";
+      let sectionCounter = 0;
 
       function getToken() {
         return localStorage.getItem("adminToken");
@@ -546,6 +498,119 @@
         setTimeout(() => {
           message.style.display = "none";
         }, 5000);
+      }
+
+      function addSection() {
+        sectionCounter++;
+        const container = document.getElementById("sectionsContainer");
+        const sectionDiv = document.createElement("div");
+        sectionDiv.className = "section-builder";
+        sectionDiv.dataset.sectionId = sectionCounter;
+
+        sectionDiv.innerHTML = `
+          <div class="section-builder-header">
+            <div class="section-builder-title">Section #${sectionCounter}</div>
+            <button type="button" class="btn btn-danger btn-small" onclick="removeSection(${sectionCounter})">
+              Remove Section
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label>Section ID *</label>
+            <input type="text" name="section-id-${sectionCounter}" placeholder="e.g., hosts, entertainment, suggestions" required />
+            <small style="color: #aaaaaa;">Unique identifier (no spaces, lowercase)</small>
+          </div>
+
+          <div class="form-group">
+            <label>Section Label *</label>
+            <input type="text" name="section-label-${sectionCounter}" placeholder="e.g., Select a Host" required />
+          </div>
+
+          <div class="form-group">
+            <label>Section Type *</label>
+            <select name="section-type-${sectionCounter}" onchange="handleSectionTypeChange(${sectionCounter})" required>
+              <option value="">-- Select Type --</option>
+              <option value="single-select">Single Select (choose one)</option>
+              <option value="multi-select">Multi Select (choose multiple)</option>
+              <option value="text-input">Text Input (free text)</option>
+            </select>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <input type="checkbox" name="section-required-${sectionCounter}" id="section-required-${sectionCounter}" checked />
+            <label for="section-required-${sectionCounter}" style="margin-bottom: 0;">Required</label>
+          </div>
+
+          <div id="section-options-${sectionCounter}" style="display: none;">
+            <div class="form-group">
+              <label>Options (Name and Image URL)</label>
+              <div id="section-options-list-${sectionCounter}">
+                <div class="option-input-group">
+                  <input type="text" placeholder="Option name" />
+                  <input type="text" placeholder="Image URL (optional)" />
+                  <button type="button" class="btn btn-danger btn-small" onclick="this.parentElement.remove()">
+                    Remove
+                  </button>
+                </div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-small" onclick="addOption(${sectionCounter})">
+                + Add Option
+              </button>
+            </div>
+          </div>
+
+          <div id="section-multi-config-${sectionCounter}" style="display: none;">
+            <div class="form-group">
+              <label>Minimum Selections</label>
+              <input type="number" name="section-min-${sectionCounter}" value="1" min="1" />
+            </div>
+            <div class="form-group">
+              <label>Maximum Selections</label>
+              <input type="number" name="section-max-${sectionCounter}" value="2" min="1" />
+            </div>
+          </div>
+        `;
+
+        container.appendChild(sectionDiv);
+      }
+
+      function removeSection(sectionId) {
+        const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+        if (section) {
+          section.remove();
+        }
+      }
+
+      function handleSectionTypeChange(sectionId) {
+        const select = document.querySelector(`[name="section-type-${sectionId}"]`);
+        const optionsDiv = document.getElementById(`section-options-${sectionId}`);
+        const multiConfigDiv = document.getElementById(`section-multi-config-${sectionId}`);
+
+        if (select.value === 'single-select' || select.value === 'multi-select') {
+          optionsDiv.style.display = 'block';
+        } else {
+          optionsDiv.style.display = 'none';
+        }
+
+        if (select.value === 'multi-select') {
+          multiConfigDiv.style.display = 'block';
+        } else {
+          multiConfigDiv.style.display = 'none';
+        }
+      }
+
+      function addOption(sectionId) {
+        const list = document.getElementById(`section-options-list-${sectionId}`);
+        const optionDiv = document.createElement("div");
+        optionDiv.className = "option-input-group";
+        optionDiv.innerHTML = `
+          <input type="text" placeholder="Option name" />
+          <input type="text" placeholder="Image URL (optional)" />
+          <button type="button" class="btn btn-danger btn-small" onclick="this.parentElement.remove()">
+            Remove
+          </button>
+        `;
+        list.appendChild(optionDiv);
       }
 
       async function loadStats() {
@@ -614,6 +679,30 @@
           }
 
           const session = data.session;
+          let sectionsHTML = '';
+
+          if (session.sections && session.sections.length > 0) {
+            sectionsHTML = session.sections.map(section => {
+              let details = `<p>Type: ${section.type}</p>`;
+              details += `<p>Required: ${section.required ? 'Yes' : 'No'}</p>`;
+
+              if (section.type === 'multi-select') {
+                details += `<p>Min: ${section.minSelections}, Max: ${section.maxSelections}</p>`;
+              }
+
+              if (section.options && section.options.length > 0) {
+                details += `<ul>${section.options.map(opt => `<li>${opt.name}</li>`).join('')}</ul>`;
+              }
+
+              return `
+                <div class="section-category">
+                  <h5>${section.label}</h5>
+                  ${details}
+                </div>
+              `;
+            }).join('');
+          }
+
           container.innerHTML = `
             <div class="current-session">
               <div class="session-header">
@@ -621,6 +710,7 @@
                   <h3>${session.title}</h3>
                   <p>🎫 Session ID: ${session.id}</p>
                   <p>📊 Total Votes: ${data.totalVotes}</p>
+                  <p>📋 Sections: ${session.sections ? session.sections.length : 0}</p>
                   <div style="margin-top: 10px;">
                     <span class="status-badge ${session.isActive ? "status-active" : "status-inactive"}">
                       ${session.isActive ? "Active" : "Inactive"}
@@ -635,23 +725,8 @@
                   <button class="btn btn-small btn-danger" onclick="resetSession('${session.id}')">Reset All Votes</button>
                 </div>
               </div>
-              <div class="artists-summary">
-                <div class="artist-category">
-                  <h5>Hosts (${session.artists.hosts.length})</h5>
-                  <ul>${session.artists.hosts.map((h) => `<li>${h.name}</li>`).join("")}</ul>
-                </div>
-                <div class="artist-category">
-                  <h5>Singers (${session.artists.singers.length})</h5>
-                  <ul>${session.artists.singers.map((s) => `<li>${s.name}</li>`).join("")}</ul>
-                </div>
-                <div class="artist-category">
-                  <h5>Santas (${session.artists.santas.length})</h5>
-                  <ul>${session.artists.santas.map((s) => `<li>${s.name}</li>`).join("")}</ul>
-                </div>
-                <div class="artist-category">
-                  <h5>Shows (${session.artists.shows.length})</h5>
-                  <ul>${session.artists.shows.map((s) => `<li>${s.name}</li>`).join("")}</ul>
-                </div>
+              <div class="sections-summary">
+                ${sectionsHTML}
               </div>
             </div>
           `;
@@ -724,7 +799,6 @@
       }
 
       function viewCompanyResults(companyId) {
-        // Get current session ID first
         fetch(`${API_URL}/admin/current-voting`, {
           headers: { Authorization: `Bearer ${getToken()}` },
         })
@@ -737,18 +811,6 @@
               showMessage("No active session", "error");
             }
           });
-      }
-
-      function addArtistInput(containerId) {
-        const container = document.getElementById(containerId);
-        const div = document.createElement("div");
-        div.className = "artist-input-group";
-        div.innerHTML = `
-          <input type="text" placeholder="Name" required />
-          <input type="text" placeholder="Image URL" required />
-          <button type="button" class="btn btn-danger btn-small" onclick="this.parentElement.remove()">Remove</button>
-        `;
-        container.appendChild(div);
       }
 
       document
@@ -795,26 +857,72 @@
           e.preventDefault();
 
           const title = document.getElementById("sessionTitle").value;
+          const sections = [];
 
-          const getArtists = (containerId) => {
-            const inputs = document
-              .getElementById(containerId)
-              .querySelectorAll(".artist-input-group");
-            return Array.from(inputs).map((group) => {
-              const [nameInput, urlInput] = group.querySelectorAll("input");
-              return {
-                name: nameInput.value.trim(),
-                imageUrl: urlInput.value.trim(),
-              };
-            });
-          };
+          // Collect all sections
+          const sectionDivs = document.querySelectorAll(".section-builder");
 
-          const artists = {
-            hosts: getArtists("hostsInputs"),
-            singers: getArtists("singersInputs"),
-            santas: getArtists("santasInputs"),
-            shows: getArtists("showsInputs"),
-          };
+          for (const sectionDiv of sectionDivs) {
+            const sectionId = sectionDiv.dataset.sectionId;
+
+            const id = document.querySelector(`[name="section-id-${sectionId}"]`).value.trim();
+            const label = document.querySelector(`[name="section-label-${sectionId}"]`).value.trim();
+            const type = document.querySelector(`[name="section-type-${sectionId}"]`).value;
+            const required = document.querySelector(`[name="section-required-${sectionId}"]`).checked;
+
+            if (!id || !label || !type) {
+              showMessage(`Please fill in all required fields for Section #${sectionId}`, "error");
+              return;
+            }
+
+            const section = {
+              id: id,
+              label: label,
+              type: type,
+              required: required
+            };
+
+            // Get options for select types
+            if (type === 'single-select' || type === 'multi-select') {
+              const optionsList = document.getElementById(`section-options-list-${sectionId}`);
+              const optionInputs = optionsList.querySelectorAll('.option-input-group');
+
+              section.options = [];
+              for (const optionInput of optionInputs) {
+                const inputs = optionInput.querySelectorAll('input');
+                const name = inputs[0].value.trim();
+                const imageUrl = inputs[1].value.trim();
+
+                if (name) {
+                  section.options.push({
+                    name: name,
+                    imageUrl: imageUrl || undefined
+                  });
+                }
+              }
+
+              if (section.options.length === 0) {
+                showMessage(`Please add at least one option for "${label}"`, "error");
+                return;
+              }
+            }
+
+            // Get min/max for multi-select
+            if (type === 'multi-select') {
+              const minInput = document.querySelector(`[name="section-min-${sectionId}"]`);
+              const maxInput = document.querySelector(`[name="section-max-${sectionId}"]`);
+
+              section.minSelections = parseInt(minInput.value) || 1;
+              section.maxSelections = parseInt(maxInput.value) || 2;
+            }
+
+            sections.push(section);
+          }
+
+          if (sections.length === 0) {
+            showMessage("Please add at least one section", "error");
+            return;
+          }
 
           const btn = document.getElementById("createVotingBtn");
           btn.disabled = true;
@@ -827,7 +935,7 @@
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${getToken()}`,
               },
-              body: JSON.stringify({ title, artists }),
+              body: JSON.stringify({ title, sections }),
             });
 
             const data = await response.json();
@@ -835,6 +943,8 @@
             if (response.ok) {
               showMessage("Global voting session created successfully!", "success");
               document.getElementById("createVotingForm").reset();
+              document.getElementById("sectionsContainer").innerHTML = "";
+              sectionCounter = 0;
               loadCurrentSession();
               loadStats();
             } else {
@@ -942,6 +1052,9 @@
           showMessage("Failed to reset session", "error");
         }
       }
+
+      // Initialize with one section
+      addSection();
 
       const token = getToken();
       if (!token) {

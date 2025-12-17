@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>New Year's Eve Event - Cast Your Vote</title>
+    <title>Event Voting - Cast Your Vote</title>
     <style>
       * {
         margin: 0;
@@ -146,7 +146,7 @@
         display: flex;
       }
 
-      .additional-request {
+      .text-input-field {
         width: 100%;
         min-height: 120px;
         padding: 15px;
@@ -159,7 +159,7 @@
         resize: vertical;
       }
 
-      .additional-request:focus {
+      .text-input-field:focus {
         outline: none;
         border-color: #ff6b35;
       }
@@ -271,22 +271,6 @@
         margin-bottom: 30px;
       }
 
-      .vote-again-btn {
-        padding: 15px 40px;
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-radius: 10px;
-        cursor: pointer;
-        font-size: 1.1em;
-        transition: all 0.3s ease;
-      }
-
-      .vote-again-btn:hover {
-        background: rgba(255, 107, 53, 0.2);
-        border-color: #ff6b35;
-      }
-
       .vote-counter {
         background: rgba(255, 255, 255, 0.1);
         padding: 8px 15px;
@@ -322,7 +306,7 @@
   <body>
     <div class="container">
       <div class="header">
-        <div class="logo">🎉 NEW YEAR'S EVE</div>
+        <div class="logo">🎉 EVENT VOTING</div>
         <p style="color: #aaaaaa; font-size: 1.2em">
           Help us plan the perfect celebration
         </p>
@@ -356,52 +340,7 @@
           <div class="error-message" id="errorMessage"></div>
 
           <form id="votingForm">
-            <!-- Hosts -->
-            <div class="voting-section">
-              <div class="section-title">1. Select a Host</div>
-              <div class="section-subtitle">Choose one host for the evening</div>
-              <div class="artists-grid" id="hostsGrid"></div>
-            </div>
-
-            <!-- Singers -->
-            <div class="voting-section">
-              <div class="section-title">2. Select Singers or Bands</div>
-              <div class="section-subtitle">
-                Choose 1 or 2 musical acts (required)
-              </div>
-              <div class="artists-grid" id="singersGrid"></div>
-            </div>
-
-            <!-- Santas -->
-            <div class="voting-section">
-              <div class="section-title">3. Select a Santa</div>
-              <div class="section-subtitle">
-                Choose your preferred Santa style
-              </div>
-              <div class="artists-grid" id="santasGrid"></div>
-            </div>
-
-            <!-- Shows -->
-            <div class="voting-section">
-              <div class="section-title">4. Select an Entertainment Show</div>
-              <div class="section-subtitle">
-                Choose one show for the event
-              </div>
-              <div class="artists-grid" id="showsGrid"></div>
-            </div>
-
-            <!-- Additional Requests -->
-            <div class="voting-section">
-              <div class="section-title">5. Additional Requests</div>
-              <div class="section-subtitle">
-                Any special requests or suggestions (optional)
-              </div>
-              <textarea
-                id="additionalRequest"
-                class="additional-request"
-                placeholder="Share your ideas or special requests here..."
-              ></textarea>
-            </div>
+            <div id="sectionsContainer"></div>
 
             <button type="submit" class="submit-btn" id="submitBtn">
               🎊 Submit Your Vote
@@ -427,10 +366,7 @@
       const API_URL = "https://clapcomedyclub.mn/artist/api";
       let currentCompanyId = "";
       let currentVotingSession = null;
-      let selectedHost = null;
-      let selectedSingers = [];
-      let selectedSanta = null;
-      let selectedShow = null;
+      let sectionValues = {};
 
       // Cookie management
       function setCookie(name, value, hours) {
@@ -479,15 +415,15 @@
           const minutesLeft = Math.ceil((cooldownTime - now) / 1000 / 60);
           const hoursLeft = Math.floor(minutesLeft / 60);
           const minsLeft = minutesLeft % 60;
-          
-          const timeString = hoursLeft > 0 
+
+          const timeString = hoursLeft > 0
             ? `${hoursLeft} hour${hoursLeft > 1 ? 's' : ''} ${minsLeft} minute${minsLeft > 1 ? 's' : ''}`
             : `${minsLeft} minute${minsLeft > 1 ? 's' : ''}`;
 
           const cooldownMessage = document.getElementById("cooldownMessage");
           cooldownMessage.textContent = `⏰ You can vote again in ${timeString}`;
           cooldownMessage.style.display = "block";
-          
+
           document.getElementById("votingForm").style.display = "none";
           return false;
         }
@@ -535,13 +471,10 @@
           document.getElementById("companyName").textContent = data.companyName;
           document.getElementById("totalVotes").textContent = data.totalVotes;
 
-          populateArtists("hostsGrid", data.artists.hosts, "host");
-          populateArtists("singersGrid", data.artists.singers, "singer");
-          populateArtists("santasGrid", data.artists.santas, "santa");
-          populateArtists("showsGrid", data.artists.shows, "show");
+          renderSections(data.sections);
 
           document.getElementById("votingActive").style.display = "block";
-          
+
           // Check if user is in cooldown
           checkVotingCooldown();
         } catch (error) {
@@ -556,61 +489,108 @@
         }
       }
 
-      function populateArtists(gridId, artists, type) {
-        const grid = document.getElementById(gridId);
-        grid.innerHTML = "";
+      function renderSections(sections) {
+        const container = document.getElementById("sectionsContainer");
+        container.innerHTML = "";
 
-        artists.forEach((artist, index) => {
-          const card = document.createElement("div");
-          card.className = "artist-card";
-          card.dataset.type = type;
-          card.dataset.name = artist.name;
+        sections.forEach((section, index) => {
+          const sectionDiv = document.createElement("div");
+          sectionDiv.className = "voting-section";
 
-          card.innerHTML = `
-            <img src="${artist.imageUrl}" alt="${artist.name}" class="artist-image" onerror="this.src='https://via.placeholder.com/200x200?text=${encodeURIComponent(artist.name)}'">
-            <div class="artist-name">${artist.name}</div>
-            <div class="selection-badge">✓</div>
-          `;
+          const sectionTitle = document.createElement("div");
+          sectionTitle.className = "section-title";
+          sectionTitle.textContent = `${index + 1}. ${section.label}`;
+          sectionDiv.appendChild(sectionTitle);
 
-          card.addEventListener("click", () => selectArtist(card, type));
+          // Add subtitle based on section type
+          const subtitle = document.createElement("div");
+          subtitle.className = "section-subtitle";
 
-          grid.appendChild(card);
+          if (section.type === 'single-select') {
+            subtitle.textContent = `Choose one option${section.required ? ' (required)' : ' (optional)'}`;
+          } else if (section.type === 'multi-select') {
+            subtitle.textContent = `Choose ${section.minSelections}-${section.maxSelections} option(s)${section.required ? ' (required)' : ' (optional)'}`;
+          } else if (section.type === 'text-input') {
+            subtitle.textContent = `Enter your response${section.required ? ' (required)' : ' (optional)'}`;
+          }
+
+          sectionDiv.appendChild(subtitle);
+
+          if (section.type === 'single-select' || section.type === 'multi-select') {
+            // Render grid of options
+            const grid = document.createElement("div");
+            grid.className = "artists-grid";
+            grid.id = `section-${section.id}`;
+
+            section.options.forEach(option => {
+              const card = document.createElement("div");
+              card.className = "artist-card";
+              card.dataset.sectionId = section.id;
+              card.dataset.optionName = option.name;
+
+              const imageUrl = option.imageUrl || `https://via.placeholder.com/200x200?text=${encodeURIComponent(option.name)}`;
+
+              card.innerHTML = `
+                <img src="${imageUrl}" alt="${option.name}" class="artist-image" onerror="this.src='https://via.placeholder.com/200x200?text=${encodeURIComponent(option.name)}'">
+                <div class="artist-name">${option.name}</div>
+                <div class="selection-badge">✓</div>
+              `;
+
+              card.addEventListener("click", () => selectOption(section, option.name, card));
+
+              grid.appendChild(card);
+            });
+
+            sectionDiv.appendChild(grid);
+          } else if (section.type === 'text-input') {
+            // Render text input
+            const textarea = document.createElement("textarea");
+            textarea.className = "text-input-field";
+            textarea.id = `section-${section.id}`;
+            textarea.placeholder = `Share your thoughts here...`;
+            textarea.addEventListener("input", (e) => {
+              sectionValues[section.id] = e.target.value;
+            });
+
+            sectionDiv.appendChild(textarea);
+          }
+
+          container.appendChild(sectionDiv);
+
+          // Initialize section values
+          if (section.type === 'single-select') {
+            sectionValues[section.id] = null;
+          } else if (section.type === 'multi-select') {
+            sectionValues[section.id] = [];
+          } else if (section.type === 'text-input') {
+            sectionValues[section.id] = "";
+          }
         });
       }
 
-      function selectArtist(card, type) {
-        const artistName = card.dataset.name;
+      function selectOption(section, optionName, card) {
+        if (section.type === 'single-select') {
+          // Deselect all cards in this section
+          const allCards = document.querySelectorAll(`[data-section-id="${section.id}"]`);
+          allCards.forEach(c => c.classList.remove("selected"));
 
-        if (type === "host") {
-          document
-            .querySelectorAll('[data-type="host"]')
-            .forEach((c) => c.classList.remove("selected"));
+          // Select this card
           card.classList.add("selected");
-          selectedHost = artistName;
-        } else if (type === "singer") {
+          sectionValues[section.id] = optionName;
+        } else if (section.type === 'multi-select') {
+          // Toggle selection
           if (card.classList.contains("selected")) {
             card.classList.remove("selected");
-            selectedSingers = selectedSingers.filter((s) => s !== artistName);
+            sectionValues[section.id] = sectionValues[section.id].filter(v => v !== optionName);
           } else {
-            if (selectedSingers.length >= 2) {
-              showError("You can select maximum 2 singers or bands");
+            // Check max selections
+            if (sectionValues[section.id].length >= section.maxSelections) {
+              showError(`You can select maximum ${section.maxSelections} option(s) for ${section.label}`);
               return;
             }
             card.classList.add("selected");
-            selectedSingers.push(artistName);
+            sectionValues[section.id].push(optionName);
           }
-        } else if (type === "santa") {
-          document
-            .querySelectorAll('[data-type="santa"]')
-            .forEach((c) => c.classList.remove("selected"));
-          card.classList.add("selected");
-          selectedSanta = artistName;
-        } else if (type === "show") {
-          document
-            .querySelectorAll('[data-type="show"]')
-            .forEach((c) => c.classList.remove("selected"));
-          card.classList.add("selected");
-          selectedShow = artistName;
         }
       }
 
@@ -623,29 +603,41 @@
           return;
         }
 
-        if (!selectedHost) {
-          showError("Please select a host");
-          return;
-        }
-        if (selectedSingers.length === 0 || selectedSingers.length > 2) {
-          showError("Please select 1 or 2 singers or bands");
-          return;
-        }
-        if (!selectedSanta) {
-          showError("Please select a Santa");
-          return;
-        }
-        if (!selectedShow) {
-          showError("Please select an entertainment show");
-          return;
+        // Validate all sections
+        for (const section of currentVotingSession.sections) {
+          const value = sectionValues[section.id];
+
+          if (section.required) {
+            if (section.type === 'text-input') {
+              if (!value || value.trim() === '') {
+                showError(`Please provide a response for ${section.label}`);
+                return;
+              }
+            } else if (section.type === 'single-select') {
+              if (!value) {
+                showError(`Please select an option for ${section.label}`);
+                return;
+              }
+            } else if (section.type === 'multi-select') {
+              if (!value || value.length === 0) {
+                showError(`Please select at least ${section.minSelections} option(s) for ${section.label}`);
+                return;
+              }
+              if (value.length < section.minSelections) {
+                showError(`Please select at least ${section.minSelections} option(s) for ${section.label}`);
+                return;
+              }
+              if (value.length > section.maxSelections) {
+                showError(`Please select at most ${section.maxSelections} option(s) for ${section.label}`);
+                return;
+              }
+            }
+          }
         }
 
         const submitBtn = document.getElementById("submitBtn");
         submitBtn.disabled = true;
         submitBtn.textContent = "Submitting...";
-
-        const additionalRequest =
-          document.getElementById("additionalRequest").value.trim();
 
         const deviceId = getDeviceId();
 
@@ -659,13 +651,7 @@
               companyId: currentCompanyId,
               votingSessionId: currentVotingSession.id,
               deviceId: deviceId,
-              votes: {
-                host: selectedHost,
-                singers: selectedSingers,
-                santa: selectedSanta,
-                show: selectedShow,
-                additionalRequest: additionalRequest,
-              },
+              votes: sectionValues,
             }),
           });
 

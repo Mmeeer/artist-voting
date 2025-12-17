@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Panel - NYE Voting</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        color: #ffffff;
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 40px;
+        flex-wrap: wrap;
+        gap: 20px;
+      }
+
+      .logo {
+        font-size: 2em;
+        font-weight: bold;
+        background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .logout-btn {
+        padding: 10px 25px;
+        background: rgba(255, 0, 0, 0.2);
+        color: white;
+        border: 2px solid rgba(255, 0, 0, 0.5);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .logout-btn:hover {
+        background: rgba(255, 0, 0, 0.4);
+        border-color: #ff0000;
+      }
+
+      .section {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 30px;
+        border-radius: 15px;
+        margin-bottom: 30px;
+      }
+
+      .section-title {
+        font-size: 1.8em;
+        margin-bottom: 25px;
+        color: #ff6b35;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .stat-card {
+        background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+        padding: 25px;
+        border-radius: 12px;
+        text-align: center;
+      }
+
+      .stat-value {
+        font-size: 3em;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      .stat-label {
+        font-size: 1.1em;
+        opacity: 0.9;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #aaaaaa;
+        font-weight: 600;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select,
+      textarea {
+        width: 100%;
+        padding: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: white;
+        font-size: 1em;
+      }
+
+      input:focus, select:focus, textarea:focus {
+        outline: none;
+        border-color: #ff6b35;
+      }
+
+      select option {
+        background: #2d2d2d;
+        color: white;
+      }
+
+      .section-builder {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 20px;
+        border-radius: 10px;
+        margin-bottom: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .section-builder-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .section-builder-title {
+        font-size: 1.2em;
+        color: #ff8c5a;
+      }
+
+      .option-input-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+
+      .option-input-group input {
+        flex: 1;
+      }
+
+      .btn {
+        padding: 12px 25px;
+        background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 1em;
+        font-weight: 600;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(255, 107, 53, 0.4);
+      }
+
+      .btn:disabled {
+        background: #555;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: none;
+      }
+
+      .btn-danger {
+        background: rgba(255, 0, 0, 0.3);
+        border: 2px solid rgba(255, 0, 0, 0.5);
+      }
+
+      .btn-danger:hover {
+        background: rgba(255, 0, 0, 0.5);
+        box-shadow: 0 5px 20px rgba(255, 0, 0, 0.4);
+      }
+
+      .btn-small {
+        padding: 8px 15px;
+        font-size: 0.9em;
+      }
+
+      .message {
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .message.success {
+        background: rgba(74, 222, 128, 0.2);
+        border: 2px solid #4ade80;
+        color: #4ade80;
+      }
+
+      .message.error {
+        background: rgba(239, 68, 68, 0.2);
+        border: 2px solid #ef4444;
+        color: #ef4444;
+      }
+
+      .current-session {
+        background: rgba(255, 255, 255, 0.08);
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+      }
+
+      .session-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      .session-info h3 {
+        font-size: 1.5em;
+        margin-bottom: 10px;
+        color: #ff6b35;
+      }
+
+      .session-info p {
+        color: #aaaaaa;
+        margin-bottom: 5px;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 1em;
+        font-weight: bold;
+      }
+
+      .status-active {
+        background: rgba(74, 222, 128, 0.2);
+        color: #4ade80;
+        border: 2px solid #4ade80;
+      }
+
+      .status-inactive {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 2px solid #ef4444;
+      }
+
+      .sections-summary {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .section-category {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 15px;
+        border-radius: 8px;
+      }
+
+      .section-category h5 {
+        color: #ff6b35;
+        margin-bottom: 10px;
+        font-size: 1em;
+      }
+
+      .section-category p {
+        font-size: 0.9em;
+        color: #aaaaaa;
+        margin-bottom: 5px;
+      }
+
+      .section-category ul {
+        list-style: none;
+        font-size: 0.9em;
+        color: #aaaaaa;
+      }
+
+      .section-category li {
+        margin-bottom: 5px;
+      }
+
+      .company-list {
+        display: grid;
+        gap: 15px;
+      }
+
+      .company-card {
+        background: rgba(255, 255, 255, 0.08);
+        padding: 20px;
+        border-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+      }
+
+      .company-info h3 {
+        font-size: 1.3em;
+        margin-bottom: 5px;
+      }
+
+      .company-info p {
+        color: #aaaaaa;
+        font-size: 0.9em;
+      }
+
+      .company-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .copy-btn {
+        background: rgba(74, 222, 128, 0.2);
+        border: 2px solid #4ade80;
+        color: #4ade80;
+      }
+
+      .copy-btn:hover {
+        background: rgba(74, 222, 128, 0.3);
+      }
+
+      .no-session {
+        text-align: center;
+        padding: 60px 20px;
+        color: #aaaaaa;
+      }
+
+      .no-session h3 {
+        font-size: 1.8em;
+        margin-bottom: 15px;
+        color: #ff6b35;
+      }
+
+      .session-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        width: auto;
+      }
+
+      @media (max-width: 768px) {
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .company-card {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div>
+          <div class="logo">🎛️ ADMIN PANEL</div>
+          <p style="color: #aaaaaa">Entertainment Voting System</p>
+        </div>
+        <button class="logout-btn" onclick="logout()">Logout</button>
+      </div>
+
+      <div class="message" id="message"></div>
+
+      <!-- Statistics -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-value">-</div>
+          <div class="stat-label">Total Companies</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">-</div>
+          <div class="stat-label">Total Votes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">-</div>
+          <div class="stat-label">Session Status</div>
+        </div>
+      </div>
+
+      <!-- Current Voting Session -->
+      <div class="section">
+        <div class="section-title">Current Global Voting Session</div>
+        <div id="currentSessionContainer">
+          <p style="color: #aaaaaa">Loading...</p>
+        </div>
+      </div>
+
+      <!-- Create New Global Voting Session -->
+      <div class="section">
+        <div class="section-title">Create New Global Voting Session</div>
+        <p style="color: #aaaaaa; margin-bottom: 20px">
+          This will create ONE voting session for ALL companies. Previous sessions will be deactivated.
+        </p>
+        <form id="createVotingForm">
+          <div class="form-group">
+            <label for="sessionTitle">Event Title *</label>
+            <input type="text" id="sessionTitle" placeholder="New Year's Eve 2025" required />
+          </div>
+
+          <div class="form-group">
+            <label>Sections</label>
+            <div id="sectionsContainer"></div>
+            <button type="button" class="btn btn-secondary btn-small" onclick="addSection()">
+              + Add Section
+            </button>
+          </div>
+
+          <button type="submit" class="btn" id="createVotingBtn">
+            Create Global Voting Session
+          </button>
+        </form>
+      </div>
+
+      <!-- Manage Companies -->
+      <div class="section">
+        <div class="section-title">Manage Companies</div>
+
+        <div style="margin-bottom: 30px;">
+          <h3 style="color: #ff6b35; margin-bottom: 15px;">Add New Company</h3>
+          <form id="createCompanyForm" style="display: flex; gap: 10px; align-items: end;">
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+              <label for="companyName">Company Name</label>
+              <input type="text" id="companyName" placeholder="Enter company name" required />
+            </div>
+            <button type="submit" class="btn" id="createCompanyBtn">
+              Add Company
+            </button>
+          </form>
+        </div>
+
+        <h3 style="color: #ff6b35; margin-bottom: 15px;">All Companies</h3>
+        <div class="company-list" id="companiesList">
+          <p style="color: #aaaaaa">Loading companies...</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = "https://clapcomedyclub.mn/artist/api";
+      let sectionCounter = 0;
+
+      function getToken() {
+        return localStorage.getItem("adminToken");
+      }
+
+      function logout() {
+        localStorage.removeItem("adminToken");
+        window.location.href = "admin.html";
+      }
+
+      function showMessage(text, type) {
+        const message = document.getElementById("message");
+        message.textContent = text;
+        message.className = `message ${type}`;
+        message.style.display = "block";
+        setTimeout(() => {
+          message.style.display = "none";
+        }, 5000);
+      }
+
+      function addSection() {
+        sectionCounter++;
+        const container = document.getElementById("sectionsContainer");
+        const sectionDiv = document.createElement("div");
+        sectionDiv.className = "section-builder";
+        sectionDiv.dataset.sectionId = sectionCounter;
+
+        sectionDiv.innerHTML = `
+          <div class="section-builder-header">
+            <div class="section-builder-title">Section #${sectionCounter}</div>
+            <button type="button" class="btn btn-danger btn-small" onclick="removeSection(${sectionCounter})">
+              Remove Section
+            </button>
+          </div>
+
+          <div class="form-group">
+            <label>Section ID *</label>
+            <input type="text" name="section-id-${sectionCounter}" placeholder="e.g., hosts, entertainment, suggestions" required />
+            <small style="color: #aaaaaa;">Unique identifier (no spaces, lowercase)</small>
+          </div>
+
+          <div class="form-group">
+            <label>Section Label *</label>
+            <input type="text" name="section-label-${sectionCounter}" placeholder="e.g., Select a Host" required />
+          </div>
+
+          <div class="form-group">
+            <label>Section Type *</label>
+            <select name="section-type-${sectionCounter}" onchange="handleSectionTypeChange(${sectionCounter})" required>
+              <option value="">-- Select Type --</option>
+              <option value="single-select">Single Select (choose one)</option>
+              <option value="multi-select">Multi Select (choose multiple)</option>
+              <option value="text-input">Text Input (free text)</option>
+            </select>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <input type="checkbox" name="section-required-${sectionCounter}" id="section-required-${sectionCounter}" checked />
+            <label for="section-required-${sectionCounter}" style="margin-bottom: 0;">Required</label>
+          </div>
+
+          <div id="section-options-${sectionCounter}" style="display: none;">
+            <div class="form-group">
+              <label>Options (Name and Image URL)</label>
+              <div id="section-options-list-${sectionCounter}">
+                <div class="option-input-group">
+                  <input type="text" placeholder="Option name" />
+                  <input type="text" placeholder="Image URL (optional)" />
+                  <button type="button" class="btn btn-danger btn-small" onclick="this.parentElement.remove()">
+                    Remove
+                  </button>
+                </div>
+              </div>
+              <button type="button" class="btn btn-secondary btn-small" onclick="addOption(${sectionCounter})">
+                + Add Option
+              </button>
+            </div>
+          </div>
+
+          <div id="section-multi-config-${sectionCounter}" style="display: none;">
+            <div class="form-group">
+              <label>Minimum Selections</label>
+              <input type="number" name="section-min-${sectionCounter}" value="1" min="1" />
+            </div>
+            <div class="form-group">
+              <label>Maximum Selections</label>
+              <input type="number" name="section-max-${sectionCounter}" value="2" min="1" />
+            </div>
+          </div>
+        `;
+
+        container.appendChild(sectionDiv);
+      }
+
+      function removeSection(sectionId) {
+        const section = document.querySelector(`[data-section-id="${sectionId}"]`);
+        if (section) {
+          section.remove();
+        }
+      }
+
+      function handleSectionTypeChange(sectionId) {
+        const select = document.querySelector(`[name="section-type-${sectionId}"]`);
+        const optionsDiv = document.getElementById(`section-options-${sectionId}`);
+        const multiConfigDiv = document.getElementById(`section-multi-config-${sectionId}`);
+
+        if (select.value === 'single-select' || select.value === 'multi-select') {
+          optionsDiv.style.display = 'block';
+        } else {
+          optionsDiv.style.display = 'none';
+        }
+
+        if (select.value === 'multi-select') {
+          multiConfigDiv.style.display = 'block';
+        } else {
+          multiConfigDiv.style.display = 'none';
+        }
+      }
+
+      function addOption(sectionId) {
+        const list = document.getElementById(`section-options-list-${sectionId}`);
+        const optionDiv = document.createElement("div");
+        optionDiv.className = "option-input-group";
+        optionDiv.innerHTML = `
+          <input type="text" placeholder="Option name" />
+          <input type="text" placeholder="Image URL (optional)" />
+          <button type="button" class="btn btn-danger btn-small" onclick="this.parentElement.remove()">
+            Remove
+          </button>
+        `;
+        list.appendChild(optionDiv);
+      }
+
+      async function loadStats() {
+        try {
+          const response = await fetch(`${API_URL}/admin/stats`, {
+            headers: {
+              Authorization: `Bearer ${getToken()}`,
+            },
+          });
+
+          if (!response.ok) {
+            if (response.status === 401) {
+              logout();
+              return;
+            }
+            throw new Error("Failed to load stats");
+          }
+
+          const data = await response.json();
+          const statsGrid = document.getElementById("statsGrid");
+
+          const totalCompanies = data.companies ? data.companies.length : 0;
+          const totalVotes = data.totalVotes || 0;
+          const sessionStatus = data.currentSession && data.currentSession.isActive ? "Active" : "Inactive";
+
+          statsGrid.innerHTML = `
+            <div class="stat-card">
+              <div class="stat-value">${totalCompanies}</div>
+              <div class="stat-label">Total Companies</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${totalVotes}</div>
+              <div class="stat-label">Total Votes</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${sessionStatus}</div>
+              <div class="stat-label">Session Status</div>
+            </div>
+          `;
+        } catch (error) {
+          console.error("Error loading stats:", error);
+        }
+      }
+
+      async function loadCurrentSession() {
+        try {
+          const response = await fetch(`${API_URL}/admin/current-voting`, {
+            headers: {
+              Authorization: `Bearer ${getToken()}`,
+            },
+          });
+
+          if (!response.ok) throw new Error("Failed to load session");
+
+          const data = await response.json();
+          const container = document.getElementById("currentSessionContainer");
+
+          if (!data.active) {
+            container.innerHTML = `
+              <div class="no-session">
+                <h3>No Active Voting Session</h3>
+                <p>Create a new global voting session below to get started.</p>
+              </div>
+            `;
+            return;
+          }
+
+          const session = data.session;
+          let sectionsHTML = '';
+
+          if (session.sections && session.sections.length > 0) {
+            sectionsHTML = session.sections.map(section => {
+              let details = `<p>Type: ${section.type}</p>`;
+              details += `<p>Required: ${section.required ? 'Yes' : 'No'}</p>`;
+
+              if (section.type === 'multi-select') {
+                details += `<p>Min: ${section.minSelections}, Max: ${section.maxSelections}</p>`;
+              }
+
+              if (section.options && section.options.length > 0) {
+                details += `<ul>${section.options.map(opt => `<li>${opt.name}</li>`).join('')}</ul>`;
+              }
+
+              return `
+                <div class="section-category">
+                  <h5>${section.label}</h5>
+                  ${details}
+                </div>
+              `;
+            }).join('');
+          }
+
+          container.innerHTML = `
+            <div class="current-session">
+              <div class="session-header">
+                <div class="session-info">
+                  <h3>${session.title}</h3>
+                  <p>🎫 Session ID: ${session.id}</p>
+                  <p>📊 Total Votes: ${data.totalVotes}</p>
+                  <p>📋 Sections: ${session.sections ? session.sections.length : 0}</p>
+                  <div style="margin-top: 10px;">
+                    <span class="status-badge ${session.isActive ? "status-active" : "status-inactive"}">
+                      ${session.isActive ? "Active" : "Inactive"}
+                    </span>
+                  </div>
+                </div>
+                <div class="session-actions">
+                  <button class="btn btn-small copy-btn" onclick="copyResultsUrl('${session.id}')">Copy Results URL</button>
+                  <button class="btn btn-small btn-secondary" onclick="toggleSession('${session.id}', ${!session.isActive})">
+                    ${session.isActive ? "Deactivate" : "Activate"}
+                  </button>
+                  <button class="btn btn-small btn-danger" onclick="resetSession('${session.id}')">Reset All Votes</button>
+                </div>
+              </div>
+              <div class="sections-summary">
+                ${sectionsHTML}
+              </div>
+            </div>
+          `;
+        } catch (error) {
+          console.error("Error loading current session:", error);
+        }
+      }
+
+      async function loadCompanies() {
+        try {
+          const [companiesResponse, statsResponse] = await Promise.all([
+            fetch(`${API_URL}/admin/companies`, {
+              headers: { Authorization: `Bearer ${getToken()}` },
+            }),
+            fetch(`${API_URL}/admin/stats`, {
+              headers: { Authorization: `Bearer ${getToken()}` },
+            }),
+          ]);
+
+          if (!companiesResponse.ok) throw new Error("Failed to load companies");
+
+          const companies = await companiesResponse.json();
+          const stats = await statsResponse.json();
+          const companiesList = document.getElementById("companiesList");
+
+          if (companies.length === 0) {
+            companiesList.innerHTML = `<p style="color: #aaaaaa">No companies yet. Add one above!</p>`;
+            return;
+          }
+
+          companiesList.innerHTML = "";
+
+          companies.forEach((company) => {
+            const companyStats = stats.companies ? stats.companies.find((s) => s.company.id === company.id) : null;
+            const votes = companyStats ? companyStats.votes : 0;
+
+            const card = document.createElement("div");
+            card.className = "company-card";
+            card.innerHTML = `
+              <div class="company-info">
+                <h3>${company.name}</h3>
+                <p>Company ID: ${company.id}</p>
+                <p>Votes: ${votes}</p>
+              </div>
+              <div class="company-actions">
+                <button class="btn btn-small copy-btn" onclick="copyVotingUrl('${company.id}')">Copy Voting URL</button>
+                <button class="btn btn-small btn-secondary" onclick="viewCompanyResults('${company.id}')">View Results</button>
+                <button class="btn btn-small btn-danger" onclick="deleteCompany('${company.id}', '${company.name}')">Delete</button>
+              </div>
+            `;
+            companiesList.appendChild(card);
+          });
+        } catch (error) {
+          console.error("Error loading companies:", error);
+        }
+      }
+
+      function copyVotingUrl(companyId) {
+        const url = `${window.location.origin}/index.html?companyId=${companyId}`;
+        navigator.clipboard.writeText(url).then(() => {
+          showMessage("Voting URL copied to clipboard!", "success");
+        });
+      }
+
+      function copyResultsUrl(sessionId) {
+        const url = `${window.location.origin}/results.html?sessionId=${sessionId}`;
+        navigator.clipboard.writeText(url).then(() => {
+          showMessage("Results URL copied to clipboard!", "success");
+        });
+      }
+
+      function viewCompanyResults(companyId) {
+        fetch(`${API_URL}/admin/current-voting`, {
+          headers: { Authorization: `Bearer ${getToken()}` },
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.active) {
+              const url = `${window.location.origin}/results.html?sessionId=${data.session.id}&companyId=${companyId}`;
+              window.open(url, "_blank");
+            } else {
+              showMessage("No active session", "error");
+            }
+          });
+      }
+
+      document
+        .getElementById("createCompanyForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const name = document.getElementById("companyName").value;
+          const btn = document.getElementById("createCompanyBtn");
+          btn.disabled = true;
+          btn.textContent = "Adding...";
+
+          try {
+            const response = await fetch(`${API_URL}/admin/create-company`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${getToken()}`,
+              },
+              body: JSON.stringify({ name }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              showMessage("Company created successfully!", "success");
+              document.getElementById("companyName").value = "";
+              loadCompanies();
+              loadStats();
+            } else {
+              showMessage(data.message || "Failed to create company", "error");
+            }
+          } catch (error) {
+            showMessage("Failed to create company", "error");
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "Add Company";
+          }
+        });
+
+      document
+        .getElementById("createVotingForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const title = document.getElementById("sessionTitle").value;
+          const sections = [];
+
+          // Collect all sections
+          const sectionDivs = document.querySelectorAll(".section-builder");
+
+          for (const sectionDiv of sectionDivs) {
+            const sectionId = sectionDiv.dataset.sectionId;
+
+            const id = document.querySelector(`[name="section-id-${sectionId}"]`).value.trim();
+            const label = document.querySelector(`[name="section-label-${sectionId}"]`).value.trim();
+            const type = document.querySelector(`[name="section-type-${sectionId}"]`).value;
+            const required = document.querySelector(`[name="section-required-${sectionId}"]`).checked;
+
+            if (!id || !label || !type) {
+              showMessage(`Please fill in all required fields for Section #${sectionId}`, "error");
+              return;
+            }
+
+            const section = {
+              id: id,
+              label: label,
+              type: type,
+              required: required
+            };
+
+            // Get options for select types
+            if (type === 'single-select' || type === 'multi-select') {
+              const optionsList = document.getElementById(`section-options-list-${sectionId}`);
+              const optionInputs = optionsList.querySelectorAll('.option-input-group');
+
+              section.options = [];
+              for (const optionInput of optionInputs) {
+                const inputs = optionInput.querySelectorAll('input');
+                const name = inputs[0].value.trim();
+                const imageUrl = inputs[1].value.trim();
+
+                if (name) {
+                  section.options.push({
+                    name: name,
+                    imageUrl: imageUrl || undefined
+                  });
+                }
+              }
+
+              if (section.options.length === 0) {
+                showMessage(`Please add at least one option for "${label}"`, "error");
+                return;
+              }
+            }
+
+            // Get min/max for multi-select
+            if (type === 'multi-select') {
+              const minInput = document.querySelector(`[name="section-min-${sectionId}"]`);
+              const maxInput = document.querySelector(`[name="section-max-${sectionId}"]`);
+
+              section.minSelections = parseInt(minInput.value) || 1;
+              section.maxSelections = parseInt(maxInput.value) || 2;
+            }
+
+            sections.push(section);
+          }
+
+          if (sections.length === 0) {
+            showMessage("Please add at least one section", "error");
+            return;
+          }
+
+          const btn = document.getElementById("createVotingBtn");
+          btn.disabled = true;
+          btn.textContent = "Creating...";
+
+          try {
+            const response = await fetch(`${API_URL}/admin/create-voting`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${getToken()}`,
+              },
+              body: JSON.stringify({ title, sections }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+              showMessage("Global voting session created successfully!", "success");
+              document.getElementById("createVotingForm").reset();
+              document.getElementById("sectionsContainer").innerHTML = "";
+              sectionCounter = 0;
+              loadCurrentSession();
+              loadStats();
+            } else {
+              showMessage(
+                data.message || "Failed to create voting session",
+                "error"
+              );
+            }
+          } catch (error) {
+            showMessage("Failed to create voting session", "error");
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "Create Global Voting Session";
+          }
+        });
+
+      async function deleteCompany(companyId, companyName) {
+        if (
+          !confirm(
+            `Are you sure you want to delete "${companyName}"? This will delete all votes from this company. This action cannot be undone.`
+          )
+        ) {
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `${API_URL}/admin/companies/${companyId}`,
+            {
+              method: "DELETE",
+              headers: {
+                Authorization: `Bearer ${getToken()}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            showMessage("Company deleted successfully!", "success");
+            loadCompanies();
+            loadStats();
+          } else {
+            showMessage("Failed to delete company", "error");
+          }
+        } catch (error) {
+          showMessage("Failed to delete company", "error");
+        }
+      }
+
+      async function toggleSession(sessionId, activate) {
+        try {
+          const response = await fetch(
+            `${API_URL}/admin/voting/${sessionId}/toggle`,
+            {
+              method: "PATCH",
+              headers: {
+                Authorization: `Bearer ${getToken()}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            showMessage(
+              `Session ${activate ? "activated" : "deactivated"} successfully!`,
+              "success"
+            );
+            loadCurrentSession();
+            loadStats();
+          } else {
+            showMessage("Failed to toggle session", "error");
+          }
+        } catch (error) {
+          showMessage("Failed to toggle session", "error");
+        }
+      }
+
+      async function resetSession(sessionId) {
+        if (
+          !confirm(
+            "Are you sure you want to reset ALL votes for this session? This action cannot be undone."
+          )
+        ) {
+          return;
+        }
+
+        try {
+          const response = await fetch(
+            `${API_URL}/admin/reset-voting/${sessionId}`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${getToken()}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            showMessage("All votes reset successfully!", "success");
+            loadCurrentSession();
+            loadStats();
+            loadCompanies();
+          } else {
+            showMessage("Failed to reset session", "error");
+          }
+        } catch (error) {
+          showMessage("Failed to reset session", "error");
+        }
+      }
+
+      // Initialize with one section
+      addSection();
+
+      const token = getToken();
+      if (!token) {
+        window.location.href = "admin.html";
+      } else {
+        fetch(`${API_URL}/admin/verify`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }).then((response) => {
+          if (!response.ok) {
+            logout();
+          } else {
+            loadStats();
+            loadCurrentSession();
+            loadCompanies();
+            setInterval(() => {
+              loadStats();
+              loadCurrentSession();
+              loadCompanies();
+            }, 10000);
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Voting Results - New Year's Eve</title>
+    <title>Voting Results</title>
     <style>
       * {
         margin: 0;
@@ -231,13 +231,6 @@
         border-radius: 6px;
       }
 
-      .additional-requests-section {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 30px;
-        border-radius: 15px;
-        margin-top: 30px;
-      }
-
       .request-item {
         background: rgba(255, 255, 255, 0.08);
         padding: 20px;
@@ -327,7 +320,7 @@
       <div class="header">
         <div class="logo">🎉 VOTING RESULTS</div>
         <p style="color: #aaaaaa; font-size: 1.2em">
-          New Year's Eve Event Planning
+          Event Results Dashboard
         </p>
       </div>
 
@@ -362,39 +355,8 @@
             </div>
           </div>
 
-          <!-- Hosts Results -->
-          <div class="results-section">
-            <div class="category-title">🎤 Hosts</div>
-            <div class="results-grid" id="hostsResults"></div>
-          </div>
-
-          <!-- Singers Results -->
-          <div class="results-section">
-            <div class="category-title">🎵 Singers & Bands</div>
-            <div class="results-grid" id="singersResults"></div>
-          </div>
-
-          <!-- Santas Results -->
-          <div class="results-section">
-            <div class="category-title">🎅 Santas</div>
-            <div class="results-grid" id="santasResults"></div>
-          </div>
-
-          <!-- Shows Results -->
-          <div class="results-section">
-            <div class="category-title">🎭 Entertainment Shows</div>
-            <div class="results-grid" id="showsResults"></div>
-          </div>
-
-          <!-- Additional Requests -->
-          <div
-            class="additional-requests-section"
-            id="requestsSection"
-            style="display: none"
-          >
-            <div class="category-title">💡 Additional Requests & Suggestions</div>
-            <div id="requestsContainer"></div>
-          </div>
+          <!-- Dynamic sections will be rendered here -->
+          <div id="sectionsContainer"></div>
 
           <div style="text-align: center; margin-top: 40px">
             <button class="back-btn" onclick="goBackToVoting()">← Back to Voting</button>
@@ -452,7 +414,7 @@
           document.getElementById("loading").style.display = "none";
           document.getElementById("content").style.display = "block";
 
-          if (!data.results) {
+          if (!data.results || Object.keys(data.results).length === 0) {
             document.getElementById("noResults").style.display = "block";
             return;
           }
@@ -464,7 +426,7 @@
           if (data.company) {
             document.getElementById("companyName").textContent = data.company;
             document.getElementById("companyNameContainer").style.display = "block";
-            
+
             // Show view mode badge
             const viewModeBadge = document.getElementById("viewModeBadge");
             viewModeBadge.textContent = "📍 Company View";
@@ -479,33 +441,8 @@
             document.getElementById("viewModeContainer").style.display = "block";
           }
 
-          displayCategoryResults(
-            "hostsResults",
-            data.results.hosts,
-            data.totalVotes
-          );
-          displayCategoryResults(
-            "singersResults",
-            data.results.singers,
-            data.totalVotes
-          );
-          displayCategoryResults(
-            "santasResults",
-            data.results.santas,
-            data.totalVotes
-          );
-          displayCategoryResults(
-            "showsResults",
-            data.results.shows,
-            data.totalVotes
-          );
-
-          if (
-            data.results.additionalRequests &&
-            data.results.additionalRequests.length > 0
-          ) {
-            displayAdditionalRequests(data.results.additionalRequests);
-          }
+          // Render dynamic sections
+          renderSections(data.results, data.totalVotes);
 
           document.getElementById("resultsActive").style.display = "block";
         } catch (error) {
@@ -516,58 +453,90 @@
         }
       }
 
-      function displayCategoryResults(containerId, results, totalVotes) {
-        const container = document.getElementById(containerId);
+      function renderSections(results, totalVotes) {
+        const container = document.getElementById("sectionsContainer");
         container.innerHTML = "";
 
-        results.forEach((result, index) => {
-          const percentage =
-            totalVotes > 0
-              ? ((result.votes / totalVotes) * 100).toFixed(1)
-              : 0;
-          const rank = index + 1;
-          let rankClass = "";
-          if (rank === 1) rankClass = "rank-1";
-          else if (rank === 2) rankClass = "rank-2";
-          else if (rank === 3) rankClass = "rank-3";
+        // Iterate through all sections in the results
+        Object.entries(results).forEach(([sectionId, sectionData]) => {
+          const sectionDiv = document.createElement("div");
+          sectionDiv.className = "results-section";
 
-          const card = document.createElement("div");
-          card.className = "result-card";
-          card.innerHTML = `
-            <div class="result-image-container">
-              <div class="rank-badge ${rankClass}">#${rank}</div>
-              <img src="${result.imageUrl}" alt="${result.name}" class="result-image" onerror="this.src='https://via.placeholder.com/300x250?text=${encodeURIComponent(result.name)}'">
-            </div>
-            <div class="result-info">
-              <div class="artist-name">${result.name}</div>
-              <div class="vote-stats">
-                <div class="vote-count">${result.votes} votes</div>
-                <div class="vote-percentage">${percentage}%</div>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: ${percentage}%"></div>
-              </div>
-            </div>
-          `;
-          container.appendChild(card);
-        });
-      }
+          const title = document.createElement("div");
+          title.className = "category-title";
+          title.textContent = sectionData.label;
+          sectionDiv.appendChild(title);
 
-      function displayAdditionalRequests(requests) {
-        const section = document.getElementById("requestsSection");
-        const container = document.getElementById("requestsContainer");
-        section.style.display = "block";
-        container.innerHTML = "";
+          if (sectionData.type === 'text-input') {
+            // Render text responses
+            if (sectionData.responses && sectionData.responses.length > 0) {
+              sectionData.responses.forEach(response => {
+                const timestamp = new Date(response.timestamp).toLocaleString();
+                const item = document.createElement("div");
+                item.className = "request-item";
+                item.innerHTML = `
+                  <div class="request-text">"${response.response}"</div>
+                  <div class="request-time">Submitted: ${timestamp}</div>
+                `;
+                sectionDiv.appendChild(item);
+              });
+            } else {
+              const noResponses = document.createElement("p");
+              noResponses.style.color = "#aaaaaa";
+              noResponses.textContent = "No responses yet";
+              sectionDiv.appendChild(noResponses);
+            }
+          } else {
+            // Render select-type results (single-select or multi-select)
+            const grid = document.createElement("div");
+            grid.className = "results-grid";
 
-        requests.forEach((req, index) => {
-          const timestamp = new Date(req.timestamp).toLocaleString();
-          const item = document.createElement("div");
-          item.className = "request-item";
-          item.innerHTML = `
-            <div class="request-text">"${req.request}"</div>
-            <div class="request-time">Submitted: ${timestamp}</div>
-          `;
-          container.appendChild(item);
+            if (sectionData.options && sectionData.options.length > 0) {
+              sectionData.options.forEach((option, index) => {
+                const percentage =
+                  totalVotes > 0
+                    ? ((option.votes / totalVotes) * 100).toFixed(1)
+                    : 0;
+                const rank = index + 1;
+                let rankClass = "";
+                if (rank === 1) rankClass = "rank-1";
+                else if (rank === 2) rankClass = "rank-2";
+                else if (rank === 3) rankClass = "rank-3";
+
+                const card = document.createElement("div");
+                card.className = "result-card";
+
+                const imageUrl = option.imageUrl || `https://via.placeholder.com/300x250?text=${encodeURIComponent(option.name)}`;
+
+                card.innerHTML = `
+                  <div class="result-image-container">
+                    <div class="rank-badge ${rankClass}">#${rank}</div>
+                    <img src="${imageUrl}" alt="${option.name}" class="result-image" onerror="this.src='https://via.placeholder.com/300x250?text=${encodeURIComponent(option.name)}'">
+                  </div>
+                  <div class="result-info">
+                    <div class="artist-name">${option.name}</div>
+                    <div class="vote-stats">
+                      <div class="vote-count">${option.votes} votes</div>
+                      <div class="vote-percentage">${percentage}%</div>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width: ${percentage}%"></div>
+                    </div>
+                  </div>
+                `;
+                grid.appendChild(card);
+              });
+            } else {
+              const noResults = document.createElement("p");
+              noResults.style.color = "#aaaaaa";
+              noResults.textContent = "No votes yet for this section";
+              grid.appendChild(noResults);
+            }
+
+            sectionDiv.appendChild(grid);
+          }
+
+          container.appendChild(sectionDiv);
         });
       }
 

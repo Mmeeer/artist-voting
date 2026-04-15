@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="mn">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Login · Artist Voting</title>
+    <title>Админ нэвтрэх · Санал хураалт</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
@@ -19,21 +19,21 @@
     <div class="relative w-full max-w-md rounded-3xl bg-white/5 border border-white/10 shadow-2xl backdrop-blur-xl p-10">
       <div class="text-center text-5xl mb-4">🔐</div>
       <h1 class="text-3xl font-bold text-center bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent mb-2">
-        Admin Login
+        Админ нэвтрэх
       </h1>
-      <p class="text-center text-slate-400 mb-8">Artist Voting System</p>
+      <p class="text-center text-slate-400 mb-8">Санал хураалтын систем</p>
 
       <div id="errorMessage" class="hidden mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/40 text-rose-300 text-center text-sm"></div>
 
       <form id="loginForm" class="space-y-5">
         <div>
-          <label for="password" class="block mb-2 text-sm font-semibold text-slate-400">Admin Password</label>
+          <label for="password" class="block mb-2 text-sm font-semibold text-slate-400">Админ нууц үг</label>
           <input
             id="password"
             type="password"
             required
             autofocus
-            placeholder="Enter your password"
+            placeholder="Нууц үгээ оруулна уу"
             class="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:bg-white/10 transition"
           />
         </div>
@@ -42,7 +42,7 @@
           id="loginBtn"
           class="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 font-semibold text-white hover:shadow-lg hover:shadow-violet-500/40 hover:-translate-y-0.5 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
         >
-          Login to Dashboard
+          Хяналтын самбарт нэвтрэх
         </button>
       </form>
     </div>
@@ -62,7 +62,7 @@
         const password = document.getElementById("password").value;
         const btn = document.getElementById("loginBtn");
         btn.disabled = true;
-        btn.textContent = "Logging in...";
+        btn.textContent = "Нэвтэрж байна...";
         try {
           const res = await fetch(`${API_URL}/admin/login`, {
             method: "POST",
@@ -74,16 +74,16 @@
             localStorage.setItem("adminToken", data.token);
             window.location.href = "admin-panel.html";
           } else {
-            showError(data.message || "Invalid password");
+            showError(data.message || "Буруу нууц үг");
             btn.disabled = false;
-            btn.textContent = "Login to Dashboard";
+            btn.textContent = "Хяналтын самбарт нэвтрэх";
             document.getElementById("password").value = "";
           }
         } catch (err) {
           console.error(err);
-          showError("Login failed. Please try again.");
+          showError("Нэвтрэхэд алдаа гарлаа. Дахин оролдоно уу.");
           btn.disabled = false;
-          btn.textContent = "Login to Dashboard";
+          btn.textContent = "Хяналтын самбарт нэвтрэх";
         }
       });
 

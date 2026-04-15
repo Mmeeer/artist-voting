@@ -916,6 +916,86 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
   }
 });
 
+// Instagram profile lookup via Instagram's own web_profile_info endpoint.
+// This endpoint requires X-IG-App-ID and works unauthenticated for public
+// profiles. It's what the logged-out instagram.com website uses internally.
+// Results are cached in memory for IG_CACHE_TTL to avoid hammering Instagram
+// (and to sidestep their aggressive rate limits on datacenter IPs).
+const igCache = new Map();
+const IG_CACHE_TTL = 60 * 60 * 1000; // 1h on success
+const IG_NEG_TTL = 10 * 60 * 1000;   // 10min on failure (negative cache)
+
+app.get('/api/instagram/:username', async (req, res) => {
+  const username = String(req.params.username || '').trim().toLowerCase();
+  if (!username || !/^[a-zA-Z0-9_.]{1,30}$/.test(username)) {
+    return res.status(400).json({ error: 'invalid username' });
+  }
+
+  const cached = igCache.get(username);
+  if (cached && cached.expires > Date.now()) {
+    res.set('X-Cache', 'HIT');
+    return cached.error
+      ? res.status(cached.status || 502).json({ error: cached.error, username })
+      : res.json(cached.data);
+  }
+
+  const cacheFailure = (status, error) => {
+    igCache.set(username, { error, status, expires: Date.now() + IG_NEG_TTL });
+    res.set('X-Cache', 'MISS');
+    return res.status(status).json({ error, username });
+  };
+
+  try {
+    const upstream = await fetch(
+      `https://i.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(username)}`,
+      {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+          'X-IG-App-ID': '936619743392459',
+          'Accept': '*/*',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+        signal: AbortSignal.timeout(8000),
+      }
+    );
+
+    if (!upstream.ok) {
+      return cacheFailure(upstream.status === 404 ? 404 : 502, `upstream ${upstream.status}`);
+    }
+
+    const json = await upstream.json();
+    const user = json && json.data && json.data.user;
+    if (!user) return cacheFailure(404, 'user not found');
+
+    const posts = (user.edge_owner_to_timeline_media?.edges || [])
+      .slice(0, 3)
+      .map((e) => ({
+        image: e.node.thumbnail_src || e.node.display_url,
+        shortcode: e.node.shortcode,
+        postUrl: `https://www.instagram.com/p/${e.node.shortcode}/`,
+        isVideo: !!e.node.is_video,
+      }))
+      .filter((p) => p.image);
+
+    const data = {
+      username: user.username,
+      fullName: user.full_name || null,
+      profilePic: user.profile_pic_url_hd || user.profile_pic_url || null,
+      isPrivate: !!user.is_private,
+      followerCount: user.edge_followed_by?.count ?? null,
+      postCount: user.edge_owner_to_timeline_media?.count ?? null,
+      posts,
+    };
+
+    igCache.set(username, { data, expires: Date.now() + IG_CACHE_TTL });
+    res.set('X-Cache', 'MISS');
+    return res.json(data);
+  } catch (err) {
+    console.error('instagram fetch error', username, err.message);
+    return cacheFailure(502, 'fetch failed');
+  }
+});
+
 app.get('/health', async (req, res) => {
   try {
     const dbState = mongoose.connection.readyState;

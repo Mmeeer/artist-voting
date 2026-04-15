@@ -177,7 +177,8 @@
       .result-image-container {
         position: relative;
         width: 100%;
-        height: 250px;
+        aspect-ratio: 1 / 1;
+        overflow: hidden;
       }
 
       .result-image {
@@ -185,6 +186,43 @@
         height: 100%;
         object-fit: cover;
         background: rgba(255, 255, 255, 0.05);
+        display: block;
+      }
+
+      .result-image-container.instagram {
+        background: linear-gradient(
+          135deg,
+          #405de6 0%,
+          #833ab4 25%,
+          #c13584 50%,
+          #e1306c 75%,
+          #fd1d1d 100%
+        );
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 6px;
+        padding: 14px;
+      }
+
+      .result-image-container.instagram .ig-logo {
+        font-size: 2.8em;
+      }
+
+      .result-image-container.instagram .ig-handle {
+        font-size: 1em;
+        font-weight: 600;
+        word-break: break-word;
+      }
+
+      .result-image-container iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        display: block;
+        background: #fff;
       }
 
       .result-info {
@@ -196,6 +234,18 @@
         font-weight: 600;
         margin-bottom: 15px;
         color: #ffffff;
+      }
+
+      .result-ig-link {
+        display: inline-block;
+        margin-top: 10px;
+        font-size: 0.85em;
+        color: #ba68c8;
+        text-decoration: none;
+      }
+
+      .result-ig-link:hover {
+        color: #e1306c;
       }
 
       .vote-stats {
@@ -362,39 +412,8 @@
             </div>
           </div>
 
-          <!-- Hosts Results -->
-          <div class="results-section">
-            <div class="category-title">🎤 Hosts</div>
-            <div class="results-grid" id="hostsResults"></div>
-          </div>
-
-          <!-- Singers Results -->
-          <div class="results-section">
-            <div class="category-title">🎵 Singers & Bands</div>
-            <div class="results-grid" id="singersResults"></div>
-          </div>
-
-          <!-- Santas Results -->
-          <div class="results-section">
-            <div class="category-title">🎅 Santas</div>
-            <div class="results-grid" id="santasResults"></div>
-          </div>
-
-          <!-- Shows Results -->
-          <div class="results-section">
-            <div class="category-title">🎭 Entertainment Shows</div>
-            <div class="results-grid" id="showsResults"></div>
-          </div>
-
-          <!-- Additional Requests -->
-          <div
-            class="additional-requests-section"
-            id="requestsSection"
-            style="display: none"
-          >
-            <div class="category-title">💡 Additional Requests & Suggestions</div>
-            <div id="requestsContainer"></div>
-          </div>
+          <!-- Dynamic sections -->
+          <div id="dynamicResults"></div>
 
           <div style="text-align: center; margin-top: 40px">
             <button class="back-btn" onclick="goBackToVoting()">← Back to Voting</button>
@@ -422,6 +441,36 @@
         }
       }
 
+      function escapeHtml(str) {
+        if (str === undefined || str === null) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function parseInstagramUrl(url) {
+        if (!url) return null;
+        try {
+          const u = new URL(url);
+          if (!u.hostname.includes("instagram.com")) return null;
+          const parts = u.pathname.split("/").filter(Boolean);
+          if (parts.length === 0) return null;
+          if (["p", "reel", "tv"].includes(parts[0]) && parts[1]) {
+            return {
+              type: "post",
+              embedUrl: `https://www.instagram.com/${parts[0]}/${parts[1]}/embed`,
+              profileUrl: url,
+            };
+          }
+          return { type: "profile", username: parts[0], profileUrl: url };
+        } catch (e) {
+          return null;
+        }
+      }
+
       async function loadResults() {
         votingSessionId = getQueryParam("sessionId");
         companyId = getQueryParam("companyId");
@@ -438,7 +487,6 @@
         }
 
         try {
-          // Determine which endpoint to use based on companyId presence
           let endpoint;
           if (companyId) {
             endpoint = `${API_URL}/results/${votingSessionId}/company/${companyId}`;
@@ -460,17 +508,13 @@
           document.getElementById("eventTitle").textContent = data.title;
           document.getElementById("totalVotes").textContent = data.totalVotes;
 
-          // Show company name if viewing company-specific results
           if (data.company) {
             document.getElementById("companyName").textContent = data.company;
             document.getElementById("companyNameContainer").style.display = "block";
-            
-            // Show view mode badge
             const viewModeBadge = document.getElementById("viewModeBadge");
             viewModeBadge.textContent = "📍 Company View";
             document.getElementById("viewModeContainer").style.display = "block";
           } else {
-            // Show that this is global view
             const viewModeBadge = document.getElementById("viewModeBadge");
             viewModeBadge.textContent = "🌍 Global View";
             viewModeBadge.style.background = "rgba(33, 150, 243, 0.2)";
@@ -479,33 +523,7 @@
             document.getElementById("viewModeContainer").style.display = "block";
           }
 
-          displayCategoryResults(
-            "hostsResults",
-            data.results.hosts,
-            data.totalVotes
-          );
-          displayCategoryResults(
-            "singersResults",
-            data.results.singers,
-            data.totalVotes
-          );
-          displayCategoryResults(
-            "santasResults",
-            data.results.santas,
-            data.totalVotes
-          );
-          displayCategoryResults(
-            "showsResults",
-            data.results.shows,
-            data.totalVotes
-          );
-
-          if (
-            data.results.additionalRequests &&
-            data.results.additionalRequests.length > 0
-          ) {
-            displayAdditionalRequests(data.results.additionalRequests);
-          }
+          renderDynamicResults(data.results, data.totalVotes);
 
           document.getElementById("resultsActive").style.display = "block";
         } catch (error) {
@@ -516,30 +534,100 @@
         }
       }
 
-      function displayCategoryResults(containerId, results, totalVotes) {
-        const container = document.getElementById(containerId);
+      function renderDynamicResults(results, totalVotes) {
+        const container = document.getElementById("dynamicResults");
         container.innerHTML = "";
 
-        results.forEach((result, index) => {
-          const percentage =
-            totalVotes > 0
-              ? ((result.votes / totalVotes) * 100).toFixed(1)
-              : 0;
+        // results is an object keyed by section ID.
+        // We render in insertion order; server inserts in section order.
+        const entries = Object.entries(results);
+
+        if (entries.length === 0) {
+          container.innerHTML = `<p style="text-align:center;color:#aaaaaa;">No sections in this session.</p>`;
+          return;
+        }
+
+        for (const [sectionId, sectionData] of entries) {
+          if (sectionData.type === "text-input") {
+            container.appendChild(buildTextResponsesSection(sectionData));
+          } else {
+            container.appendChild(buildOptionResultsSection(sectionData, totalVotes));
+          }
+        }
+      }
+
+      function buildOptionResultsSection(sectionData, totalVotes) {
+        const section = document.createElement("div");
+        section.className = "results-section";
+
+        const title = document.createElement("div");
+        title.className = "category-title";
+        title.textContent = sectionData.label || "";
+        section.appendChild(title);
+
+        const grid = document.createElement("div");
+        grid.className = "results-grid";
+
+        if (!sectionData.options || sectionData.options.length === 0) {
+          const empty = document.createElement("p");
+          empty.style.color = "#aaaaaa";
+          empty.textContent = "No options in this section.";
+          section.appendChild(empty);
+          return section;
+        }
+
+        // Compute section-local total (sum of votes) for more meaningful percentages
+        const sectionTotal = sectionData.options.reduce(
+          (sum, opt) => sum + (opt.votes || 0),
+          0
+        );
+        const denom = sectionTotal > 0 ? sectionTotal : 1;
+
+        sectionData.options.forEach((result, index) => {
+          const percentage = sectionTotal > 0
+            ? ((result.votes / denom) * 100).toFixed(1)
+            : "0.0";
           const rank = index + 1;
           let rankClass = "";
           if (rank === 1) rankClass = "rank-1";
           else if (rank === 2) rankClass = "rank-2";
           else if (rank === 3) rankClass = "rank-3";
 
+          const instaInfo = result.instagramUrl ? parseInstagramUrl(result.instagramUrl) : null;
+          let mediaHtml;
+          let footerHtml = "";
+
+          if (result.imageUrl) {
+            mediaHtml = `
+              <img src="${escapeHtml(result.imageUrl)}" alt="${escapeHtml(result.name)}" class="result-image"
+                   onerror="this.onerror=null;this.src='https://via.placeholder.com/400x400?text=${encodeURIComponent(result.name)}'">
+            `;
+          } else if (instaInfo && instaInfo.type === "post") {
+            mediaHtml = `<iframe src="${escapeHtml(instaInfo.embedUrl)}" loading="lazy" scrolling="no" allowtransparency="true" allow="encrypted-media"></iframe>`;
+          } else if (instaInfo && instaInfo.type === "profile") {
+            mediaHtml = `
+              <div class="ig-logo">📸</div>
+              <div class="ig-handle">@${escapeHtml(instaInfo.username)}</div>
+            `;
+            footerHtml = `<a class="result-ig-link" href="${escapeHtml(instaInfo.profileUrl)}" target="_blank" rel="noopener noreferrer">View on Instagram ↗</a>`;
+          } else {
+            mediaHtml = `<img src="https://via.placeholder.com/400x400?text=${encodeURIComponent(result.name)}" alt="${escapeHtml(result.name)}" class="result-image">`;
+          }
+
+          const igClass =
+            !result.imageUrl && instaInfo && instaInfo.type === "profile"
+              ? " instagram"
+              : "";
+
           const card = document.createElement("div");
           card.className = "result-card";
           card.innerHTML = `
-            <div class="result-image-container">
+            <div class="result-image-container${igClass}">
               <div class="rank-badge ${rankClass}">#${rank}</div>
-              <img src="${result.imageUrl}" alt="${result.name}" class="result-image" onerror="this.src='https://via.placeholder.com/300x250?text=${encodeURIComponent(result.name)}'">
+              ${mediaHtml}
             </div>
             <div class="result-info">
-              <div class="artist-name">${result.name}</div>
+              <div class="artist-name">${escapeHtml(result.name)}</div>
               <div class="vote-stats">
                 <div class="vote-count">${result.votes} votes</div>
                 <div class="vote-percentage">${percentage}%</div>
@@ -547,28 +635,45 @@
               <div class="progress-bar">
                 <div class="progress-fill" style="width: ${percentage}%"></div>
               </div>
+              ${footerHtml}
             </div>
           `;
-          container.appendChild(card);
+          grid.appendChild(card);
         });
+
+        section.appendChild(grid);
+        return section;
       }
 
-      function displayAdditionalRequests(requests) {
-        const section = document.getElementById("requestsSection");
-        const container = document.getElementById("requestsContainer");
-        section.style.display = "block";
-        container.innerHTML = "";
+      function buildTextResponsesSection(sectionData) {
+        const section = document.createElement("div");
+        section.className = "additional-requests-section";
 
-        requests.forEach((req, index) => {
+        const title = document.createElement("div");
+        title.className = "category-title";
+        title.textContent = `💡 ${sectionData.label || "Responses"}`;
+        section.appendChild(title);
+
+        if (!sectionData.responses || sectionData.responses.length === 0) {
+          const empty = document.createElement("p");
+          empty.style.color = "#aaaaaa";
+          empty.textContent = "No responses yet.";
+          section.appendChild(empty);
+          return section;
+        }
+
+        sectionData.responses.forEach((req) => {
           const timestamp = new Date(req.timestamp).toLocaleString();
           const item = document.createElement("div");
           item.className = "request-item";
           item.innerHTML = `
-            <div class="request-text">"${req.request}"</div>
-            <div class="request-time">Submitted: ${timestamp}</div>
+            <div class="request-text">"${escapeHtml(req.response)}"</div>
+            <div class="request-time">Submitted: ${escapeHtml(timestamp)}</div>
           `;
-          container.appendChild(item);
+          section.appendChild(item);
         });
+
+        return section;
       }
 
       loadResults();

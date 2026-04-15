@@ -92,6 +92,67 @@
         return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
       }
 
+      async function fetchInstagramProfile(username) {
+        const cacheKey = `ig_profile_${username}`;
+        try {
+          const cached = sessionStorage.getItem(cacheKey);
+          if (cached) {
+            const data = JSON.parse(cached);
+            if (data.expires > Date.now()) return data.profile;
+          }
+        } catch {}
+
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
+          const res = await fetch(`${API_URL}/instagram/${encodeURIComponent(username)}`, { signal: controller.signal });
+          clearTimeout(timeoutId);
+          const profile = res.ok ? await res.json() : null;
+          try {
+            sessionStorage.setItem(cacheKey, JSON.stringify({
+              profile,
+              expires: Date.now() + (profile ? 30 * 60 * 1000 : 5 * 60 * 1000),
+            }));
+          } catch {}
+          return profile;
+        } catch {
+          return null;
+        }
+      }
+
+      function lazyLoadInstagramProfiles() {
+        document.querySelectorAll(".ig-profile-card:not([data-loaded])").forEach(async (card) => {
+          card.dataset.loaded = "1";
+          const username = card.dataset.username;
+          if (!username) return;
+          const profile = await fetchInstagramProfile(username);
+          if (!profile) {
+            card.querySelector(".ig-posts-slot")?.remove();
+            return;
+          }
+          const avatarImg = card.querySelector(".ig-avatar-img");
+          if (profile.profilePic && avatarImg) {
+            avatarImg.src = profile.profilePic;
+            avatarImg.style.display = "";
+          }
+          if (profile.fullName) {
+            const nameEl = card.querySelector(".ig-fullname");
+            if (nameEl) { nameEl.textContent = profile.fullName; nameEl.classList.remove("hidden"); }
+          }
+          const slot = card.querySelector(".ig-posts-slot");
+          if (slot) {
+            if (profile.posts && profile.posts.length) {
+              slot.innerHTML = profile.posts.slice(0, 3).map((p) => `
+                <a href="${escapeHtml(p.postUrl)}" target="_blank" rel="noopener noreferrer" class="block aspect-square overflow-hidden rounded bg-black/20">
+                  <img src="${escapeHtml(p.image)}" alt="" loading="lazy" class="w-full h-full object-cover" onerror="this.parentElement.style.display='none'">
+                </a>`).join("");
+            } else {
+              slot.remove();
+            }
+          }
+        });
+      }
+
       function parseInstagramUrl(url) {
         if (!url) return null;
         try {
@@ -169,6 +230,7 @@
           if (sectionData.type === "text-input") container.appendChild(buildTextResponsesSection(sectionData));
           else container.appendChild(buildOptionResultsSection(sectionData, totalVotes));
         }
+        lazyLoadInstagramProfiles();
       }
 
       function buildOptionResultsSection(sectionData, totalVotes) {
@@ -218,20 +280,21 @@
           } else if (instaInfo && instaInfo.type === "profile") {
             const username = instaInfo.username;
             mediaBlock = `
-              <div class="relative w-full aspect-square ig-gradient text-white p-5 flex flex-col items-center justify-center gap-3">
+              <div class="ig-profile-card relative w-full ig-gradient text-white p-5 flex flex-col items-center gap-3" data-username="${escapeHtml(username)}">
                 <div class="absolute top-3 left-3 z-10 w-10 h-10 rounded-full flex items-center justify-center font-bold ${rankClass}">#${rank}</div>
-                <div class="relative w-24 h-24 rounded-full border-[3px] border-white bg-white/20 overflow-hidden shadow-xl flex items-center justify-center text-4xl">
+                <div class="relative w-24 h-24 rounded-full border-[3px] border-white bg-white/30 overflow-hidden shadow-xl flex items-center justify-center text-4xl mt-2">
                   <span>📸</span>
-                  <img
-                    src="https://unavatar.io/instagram/${encodeURIComponent(username)}?fallback=false"
-                    alt=""
-                    loading="lazy"
-                    class="absolute inset-0 w-full h-full object-cover"
-                    onerror="this.remove()" />
+                  <img class="ig-avatar-img absolute inset-0 w-full h-full object-cover" alt="" loading="lazy" style="display:none" onerror="this.style.display='none'">
                 </div>
                 <div class="text-center min-w-0 w-full">
                   <div class="font-bold break-words">@${escapeHtml(username)}</div>
-                  <div class="text-xs opacity-80">on Instagram</div>
+                  <div class="ig-fullname hidden text-xs opacity-90 break-words"></div>
+                  <div class="text-xs opacity-70 mt-0.5">on Instagram</div>
+                </div>
+                <div class="grid grid-cols-3 gap-1 w-full ig-posts-slot">
+                  <div class="aspect-square rounded bg-black/20 animate-pulse"></div>
+                  <div class="aspect-square rounded bg-black/20 animate-pulse"></div>
+                  <div class="aspect-square rounded bg-black/20 animate-pulse"></div>
                 </div>
               </div>`;
             footerHtml = `<a class="block mt-3 text-sm text-fuchsia-400 hover:text-fuchsia-300 transition" href="${escapeHtml(instaInfo.profileUrl)}" target="_blank" rel="noopener noreferrer">View on Instagram ↗</a>`;

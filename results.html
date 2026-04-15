@@ -3,420 +3,73 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Voting Results - New Year's Eve</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-        color: #ffffff;
-        min-height: 100vh;
-        padding: 20px;
-      }
-
-      .container {
-        max-width: 1400px;
-        margin: 0 auto;
-        padding: 40px 20px;
-      }
-
-      .header {
-        text-align: center;
-        margin-bottom: 40px;
-      }
-
-      .logo {
-        font-size: 2.5em;
-        font-weight: bold;
-        background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        margin-bottom: 10px;
-      }
-
-      .event-info {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 25px;
-        border-radius: 15px;
-        margin-bottom: 30px;
-        border-left: 4px solid #ff6b35;
-      }
-
-      .event-title {
-        font-size: 1.8em;
-        margin-bottom: 10px;
-        color: #ff6b35;
-      }
-
-      .event-details {
-        font-size: 1.1em;
-        color: #aaaaaa;
-        display: flex;
-        gap: 30px;
-        flex-wrap: wrap;
-        align-items: center;
-      }
-
-      .view-mode-badge {
-        display: inline-flex;
-        align-items: center;
-        background: rgba(138, 43, 226, 0.2);
-        padding: 8px 15px;
-        border-radius: 20px;
-        font-size: 0.9em;
-        color: #ba68c8;
-        border: 2px solid #ba68c8;
-        font-weight: bold;
-      }
-
-      .live-indicator {
-        display: inline-flex;
-        align-items: center;
-        background: rgba(74, 222, 128, 0.2);
-        padding: 8px 15px;
-        border-radius: 20px;
-        font-size: 0.9em;
-      }
-
-      .live-dot {
-        width: 8px;
-        height: 8px;
-        background: #4ade80;
-        border-radius: 50%;
-        margin-right: 8px;
-        animation: pulse 2s infinite;
-      }
-
-      @keyframes pulse {
-        0%,
-        100% {
-          opacity: 1;
+    <title>Voting Results</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
+    </script>
+    <link href="https://rsms.me/inter/inter.css" rel="stylesheet" />
+    <style type="text/tailwindcss">
+      @layer components {
+        .result-card {
+          @apply rounded-2xl bg-white/5 border-2 border-transparent overflow-hidden transition-all duration-300;
         }
-        50% {
-          opacity: 0.5;
+        .result-card:hover {
+          @apply -translate-y-1 border-violet-500 shadow-xl shadow-violet-500/20;
         }
-      }
-
-      .results-section {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 30px;
-        border-radius: 15px;
-        margin-bottom: 30px;
-      }
-
-      .category-title {
-        font-size: 1.8em;
-        margin-bottom: 25px;
-        color: #ff6b35;
-        display: flex;
-        align-items: center;
-        gap: 15px;
-      }
-
-      .results-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
-      }
-
-      .result-card {
-        background: rgba(255, 255, 255, 0.08);
-        border-radius: 12px;
-        overflow: hidden;
-        transition: all 0.3s ease;
-        border: 2px solid transparent;
-      }
-
-      .result-card:hover {
-        transform: translateY(-5px);
-        border-color: #ff6b35;
-        box-shadow: 0 10px 30px rgba(255, 107, 53, 0.3);
-      }
-
-      .rank-badge {
-        position: absolute;
-        top: 10px;
-        left: 10px;
-        width: 40px;
-        height: 40px;
-        background: rgba(255, 107, 53, 0.9);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        font-size: 1.2em;
-        z-index: 10;
-      }
-
-      .rank-1 {
-        background: linear-gradient(135deg, #ffd700, #ffed4e);
-        color: #000;
-        box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
-      }
-
-      .rank-2 {
-        background: linear-gradient(135deg, #c0c0c0, #e8e8e8);
-        color: #000;
-        box-shadow: 0 0 20px rgba(192, 192, 192, 0.6);
-      }
-
-      .rank-3 {
-        background: linear-gradient(135deg, #cd7f32, #e89b5a);
-        color: #fff;
-        box-shadow: 0 0 20px rgba(205, 127, 50, 0.6);
-      }
-
-      .result-image-container {
-        position: relative;
-        width: 100%;
-        aspect-ratio: 1 / 1;
-        overflow: hidden;
-      }
-
-      .result-image {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        background: rgba(255, 255, 255, 0.05);
-        display: block;
-      }
-
-      .result-image-container.instagram {
-        background: linear-gradient(
-          135deg,
-          #405de6 0%,
-          #833ab4 25%,
-          #c13584 50%,
-          #e1306c 75%,
-          #fd1d1d 100%
-        );
-        color: white;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-direction: column;
-        gap: 6px;
-        padding: 14px;
-      }
-
-      .result-image-container.instagram .ig-logo {
-        font-size: 2.8em;
-      }
-
-      .result-image-container.instagram .ig-handle {
-        font-size: 1em;
-        font-weight: 600;
-        word-break: break-word;
-      }
-
-      .result-image-container iframe {
-        width: 100%;
-        height: 100%;
-        border: 0;
-        display: block;
-        background: #fff;
-      }
-
-      .result-info {
-        padding: 20px;
-      }
-
-      .artist-name {
-        font-size: 1.3em;
-        font-weight: 600;
-        margin-bottom: 15px;
-        color: #ffffff;
-      }
-
-      .result-ig-link {
-        display: inline-block;
-        margin-top: 10px;
-        font-size: 0.85em;
-        color: #ba68c8;
-        text-decoration: none;
-      }
-
-      .result-ig-link:hover {
-        color: #e1306c;
-      }
-
-      .vote-stats {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 15px;
-      }
-
-      .vote-count {
-        font-size: 1.5em;
-        font-weight: bold;
-        color: #ff6b35;
-      }
-
-      .vote-percentage {
-        font-size: 1.1em;
-        color: #aaaaaa;
-      }
-
-      .progress-bar {
-        width: 100%;
-        height: 12px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 6px;
-        overflow: hidden;
-      }
-
-      .progress-fill {
-        height: 100%;
-        background: linear-gradient(90deg, #ff6b35 0%, #ff8c5a 100%);
-        transition: width 0.5s ease;
-        border-radius: 6px;
-      }
-
-      .additional-requests-section {
-        background: rgba(255, 255, 255, 0.05);
-        padding: 30px;
-        border-radius: 15px;
-        margin-top: 30px;
-      }
-
-      .request-item {
-        background: rgba(255, 255, 255, 0.08);
-        padding: 20px;
-        border-radius: 10px;
-        margin-bottom: 15px;
-        border-left: 3px solid #ff6b35;
-      }
-
-      .request-text {
-        font-size: 1.1em;
-        margin-bottom: 10px;
-      }
-
-      .request-time {
-        font-size: 0.9em;
-        color: #aaaaaa;
-      }
-
-      .loading {
-        text-align: center;
-        padding: 60px;
-        font-size: 1.3em;
-      }
-
-      .spinner {
-        border: 4px solid rgba(255, 255, 255, 0.1);
-        border-left-color: #ff6b35;
-        border-radius: 50%;
-        width: 50px;
-        height: 50px;
-        animation: spin 1s linear infinite;
-        margin: 20px auto;
-      }
-
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      .no-results {
-        text-align: center;
-        padding: 80px 20px;
-      }
-
-      .no-results h2 {
-        font-size: 2.2em;
-        margin-bottom: 20px;
-        color: #ff6b35;
-      }
-
-      .back-btn {
-        display: inline-block;
-        padding: 12px 30px;
-        background: rgba(255, 255, 255, 0.1);
-        color: white;
-        text-decoration: none;
-        border-radius: 10px;
-        transition: all 0.3s ease;
-        border: 2px solid rgba(255, 255, 255, 0.2);
-        margin-top: 20px;
-        cursor: pointer;
-      }
-
-      .back-btn:hover {
-        background: rgba(255, 107, 53, 0.2);
-        border-color: #ff6b35;
-      }
-
-      @media (max-width: 768px) {
-        .results-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .result-image-container {
-          height: 200px;
-        }
-
-        .category-title {
-          font-size: 1.5em;
+        .ig-gradient {
+          background: linear-gradient(135deg, #405de6 0%, #833ab4 25%, #c13584 50%, #e1306c 75%, #fd1d1d 100%);
         }
       }
     </style>
   </head>
-  <body>
-    <div class="container">
-      <div class="header">
-        <div class="logo">🎉 VOTING RESULTS</div>
-        <p style="color: #aaaaaa; font-size: 1.2em">
-          New Year's Eve Event Planning
-        </p>
+  <body class="min-h-screen bg-slate-950 text-slate-100 font-sans relative overflow-x-hidden">
+    <div class="pointer-events-none fixed inset-0 -z-10">
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full bg-violet-600/15 blur-[140px]"></div>
+      <div class="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full bg-fuchsia-600/10 blur-[120px]"></div>
+    </div>
+
+    <div class="max-w-6xl mx-auto px-4 py-10 md:py-16">
+      <header class="text-center mb-10">
+        <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent mb-3">
+          🎉 VOTING RESULTS
+        </h1>
+        <p class="text-slate-400 text-lg">Live event planning results</p>
+      </header>
+
+      <div id="loading" class="text-center py-20">
+        <div class="inline-block w-12 h-12 border-4 border-white/10 border-l-violet-500 rounded-full animate-spin"></div>
+        <p class="mt-5 text-lg text-slate-400">Loading results...</p>
       </div>
 
-      <div id="loading" class="loading">
-        <div class="spinner"></div>
-        <p>Loading results...</p>
-      </div>
-
-      <div id="content" style="display: none">
-        <div id="noResults" class="no-results" style="display: none">
-          <h2>No Results Available</h2>
-          <p style="color: #aaaaaa; font-size: 1.2em">
-            There are no voting results yet for this session.
-          </p>
+      <div id="content" class="hidden">
+        <div id="noResults" class="hidden text-center py-20">
+          <h2 class="text-3xl font-bold text-violet-400 mb-4">No Results Available</h2>
+          <p class="text-slate-400 text-lg">There are no voting results yet for this session.</p>
         </div>
 
-        <div id="resultsActive" style="display: none">
-          <div class="event-info">
-            <div class="event-title" id="eventTitle"></div>
-            <div class="event-details">
-              <div id="companyNameContainer" style="display: none;">
-                🏢 <span id="companyName"></span>
-              </div>
-              <div id="viewModeContainer" style="display: none;">
-                <span class="view-mode-badge" id="viewModeBadge"></span>
+        <div id="resultsActive" class="hidden">
+          <div class="rounded-2xl bg-white/5 border-l-4 border-violet-500 p-6 mb-8 backdrop-blur-sm">
+            <h2 id="eventTitle" class="text-2xl font-bold text-violet-400 mb-3"></h2>
+            <div class="flex flex-wrap gap-4 items-center text-slate-400">
+              <div id="companyNameContainer" class="hidden">🏢 <span id="companyName"></span></div>
+              <div id="viewModeContainer" class="hidden">
+                <span id="viewModeBadge" class="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold border-2"></span>
               </div>
               <div>📊 <span id="totalVotes">0</span> total votes</div>
-              <div class="live-indicator">
-                <span class="live-dot"></span>
-                <span>Live Results</span>
+              <div class="inline-flex items-center px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-sm">
+                <span class="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse"></span>
+                Live Results
               </div>
             </div>
           </div>
 
-          <!-- Dynamic sections -->
-          <div id="dynamicResults"></div>
+          <div id="dynamicResults" class="space-y-8"></div>
 
-          <div style="text-align: center; margin-top: 40px">
-            <button class="back-btn" onclick="goBackToVoting()">← Back to Voting</button>
+          <div class="text-center mt-10">
+            <button onclick="goBackToVoting()" class="inline-block px-8 py-3 rounded-xl bg-white/10 hover:bg-violet-500/20 border-2 border-white/20 hover:border-violet-500 transition">
+              ← Back to Voting
+            </button>
           </div>
         </div>
       </div>
@@ -424,31 +77,19 @@
 
     <script>
       const API_URL = "https://clapcomedyclub.mn/artist/api";
-      let votingSessionId = "";
-      let companyId = "";
-      let updateInterval;
+      let votingSessionId = "", companyId = "", updateInterval;
 
-      function getQueryParam(param) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(param);
-      }
+      const $ = (id) => document.getElementById(id);
+      const getQueryParam = (p) => new URLSearchParams(window.location.search).get(p);
 
       function goBackToVoting() {
-        if (companyId) {
-          window.location.href = `index.html?companyId=${companyId}`;
-        } else {
-          window.history.back();
-        }
+        if (companyId) window.location.href = `index.html?companyId=${companyId}`;
+        else window.history.back();
       }
 
       function escapeHtml(str) {
-        if (str === undefined || str === null) return "";
-        return String(str)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
+        if (str == null) return "";
+        return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
       }
 
       function parseInstagramUrl(url) {
@@ -459,16 +100,10 @@
           const parts = u.pathname.split("/").filter(Boolean);
           if (parts.length === 0) return null;
           if (["p", "reel", "tv"].includes(parts[0]) && parts[1]) {
-            return {
-              type: "post",
-              embedUrl: `https://www.instagram.com/${parts[0]}/${parts[1]}/embed`,
-              profileUrl: url,
-            };
+            return { type: "post", embedUrl: `https://www.instagram.com/${parts[0]}/${parts[1]}/embed`, profileUrl: url };
           }
           return { type: "profile", username: parts[0], profileUrl: url };
-        } catch (e) {
-          return null;
-        }
+        } catch { return null; }
       }
 
       async function loadResults() {
@@ -476,168 +111,133 @@
         companyId = getQueryParam("companyId");
 
         if (!votingSessionId) {
-          document.getElementById("loading").style.display = "none";
-          document.getElementById("content").style.display = "block";
-          document.getElementById("noResults").style.display = "block";
-          document.getElementById("noResults").innerHTML = `
-            <h2>Invalid URL</h2>
-            <p style="color: #aaaaaa; font-size: 1.2em">Session ID is missing from the URL.</p>
-          `;
+          $("loading").classList.add("hidden");
+          $("content").classList.remove("hidden");
+          $("noResults").classList.remove("hidden");
+          $("noResults").innerHTML = `
+            <h2 class="text-3xl font-bold text-violet-400 mb-4">Invalid URL</h2>
+            <p class="text-slate-400 text-lg">Session ID is missing from the URL.</p>`;
           return;
         }
 
         try {
-          let endpoint;
-          if (companyId) {
-            endpoint = `${API_URL}/results/${votingSessionId}/company/${companyId}`;
-          } else {
-            endpoint = `${API_URL}/results/${votingSessionId}`;
-          }
+          const endpoint = companyId
+            ? `${API_URL}/results/${votingSessionId}/company/${companyId}`
+            : `${API_URL}/results/${votingSessionId}`;
+          const res = await fetch(endpoint);
+          const data = await res.json();
 
-          const response = await fetch(endpoint);
-          const data = await response.json();
+          $("loading").classList.add("hidden");
+          $("content").classList.remove("hidden");
 
-          document.getElementById("loading").style.display = "none";
-          document.getElementById("content").style.display = "block";
+          if (!data.results) { $("noResults").classList.remove("hidden"); return; }
 
-          if (!data.results) {
-            document.getElementById("noResults").style.display = "block";
-            return;
-          }
+          $("eventTitle").textContent = data.title;
+          $("totalVotes").textContent = data.totalVotes;
 
-          document.getElementById("eventTitle").textContent = data.title;
-          document.getElementById("totalVotes").textContent = data.totalVotes;
-
+          const badge = $("viewModeBadge");
           if (data.company) {
-            document.getElementById("companyName").textContent = data.company;
-            document.getElementById("companyNameContainer").style.display = "block";
-            const viewModeBadge = document.getElementById("viewModeBadge");
-            viewModeBadge.textContent = "📍 Company View";
-            document.getElementById("viewModeContainer").style.display = "block";
+            $("companyName").textContent = data.company;
+            $("companyNameContainer").classList.remove("hidden");
+            badge.textContent = "📍 Company View";
+            badge.className = "inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold border-2 bg-fuchsia-500/20 border-fuchsia-400 text-fuchsia-300";
           } else {
-            const viewModeBadge = document.getElementById("viewModeBadge");
-            viewModeBadge.textContent = "🌍 Global View";
-            viewModeBadge.style.background = "rgba(33, 150, 243, 0.2)";
-            viewModeBadge.style.borderColor = "#2196f3";
-            viewModeBadge.style.color = "#64b5f6";
-            document.getElementById("viewModeContainer").style.display = "block";
+            badge.textContent = "🌍 Global View";
+            badge.className = "inline-flex items-center px-4 py-1.5 rounded-full text-sm font-bold border-2 bg-sky-500/20 border-sky-400 text-sky-300";
           }
+          $("viewModeContainer").classList.remove("hidden");
 
           renderDynamicResults(data.results, data.totalVotes);
-
-          document.getElementById("resultsActive").style.display = "block";
-        } catch (error) {
-          console.error("Error loading results:", error);
-          document.getElementById("loading").style.display = "none";
-          document.getElementById("content").style.display = "block";
-          document.getElementById("noResults").style.display = "block";
+          $("resultsActive").classList.remove("hidden");
+        } catch (err) {
+          console.error("Error loading results:", err);
+          $("loading").classList.add("hidden");
+          $("content").classList.remove("hidden");
+          $("noResults").classList.remove("hidden");
         }
       }
 
       function renderDynamicResults(results, totalVotes) {
-        const container = document.getElementById("dynamicResults");
+        const container = $("dynamicResults");
         container.innerHTML = "";
-
-        // results is an object keyed by section ID.
-        // We render in insertion order; server inserts in section order.
         const entries = Object.entries(results);
-
         if (entries.length === 0) {
-          container.innerHTML = `<p style="text-align:center;color:#aaaaaa;">No sections in this session.</p>`;
+          container.innerHTML = `<p class="text-center text-slate-400">No sections in this session.</p>`;
           return;
         }
-
-        for (const [sectionId, sectionData] of entries) {
-          if (sectionData.type === "text-input") {
-            container.appendChild(buildTextResponsesSection(sectionData));
-          } else {
-            container.appendChild(buildOptionResultsSection(sectionData, totalVotes));
-          }
+        for (const [, sectionData] of entries) {
+          if (sectionData.type === "text-input") container.appendChild(buildTextResponsesSection(sectionData));
+          else container.appendChild(buildOptionResultsSection(sectionData, totalVotes));
         }
       }
 
       function buildOptionResultsSection(sectionData, totalVotes) {
         const section = document.createElement("div");
-        section.className = "results-section";
-
-        const title = document.createElement("div");
-        title.className = "category-title";
-        title.textContent = sectionData.label || "";
-        section.appendChild(title);
-
-        const grid = document.createElement("div");
-        grid.className = "results-grid";
+        section.className = "rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm p-6 md:p-8";
+        section.innerHTML = `<h3 class="text-2xl font-bold text-violet-400 mb-6">${escapeHtml(sectionData.label || "")}</h3>`;
 
         if (!sectionData.options || sectionData.options.length === 0) {
-          const empty = document.createElement("p");
-          empty.style.color = "#aaaaaa";
-          empty.textContent = "No options in this section.";
-          section.appendChild(empty);
+          section.innerHTML += `<p class="text-slate-400">No options in this section.</p>`;
           return section;
         }
 
-        // Compute section-local total (sum of votes) for more meaningful percentages
-        const sectionTotal = sectionData.options.reduce(
-          (sum, opt) => sum + (opt.votes || 0),
-          0
-        );
+        const grid = document.createElement("div");
+        grid.className = "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5";
+
+        const sectionTotal = sectionData.options.reduce((s, o) => s + (o.votes || 0), 0);
         const denom = sectionTotal > 0 ? sectionTotal : 1;
 
+        const rankStyles = {
+          1: "bg-gradient-to-br from-yellow-300 to-yellow-500 text-black shadow-lg shadow-yellow-400/50",
+          2: "bg-gradient-to-br from-slate-300 to-slate-400 text-black shadow-lg shadow-slate-300/50",
+          3: "bg-gradient-to-br from-amber-600 to-amber-700 text-white shadow-lg shadow-amber-600/50",
+        };
+
         sectionData.options.forEach((result, index) => {
-          const percentage = sectionTotal > 0
-            ? ((result.votes / denom) * 100).toFixed(1)
-            : "0.0";
+          const percentage = sectionTotal > 0 ? ((result.votes / denom) * 100).toFixed(1) : "0.0";
           const rank = index + 1;
-          let rankClass = "";
-          if (rank === 1) rankClass = "rank-1";
-          else if (rank === 2) rankClass = "rank-2";
-          else if (rank === 3) rankClass = "rank-3";
+          const rankClass = rankStyles[rank] || "bg-violet-500 text-white";
 
           const instaInfo = result.instagramUrl ? parseInstagramUrl(result.instagramUrl) : null;
-          let mediaHtml;
-          let footerHtml = "";
+          let mediaHtml = "", footerHtml = "";
+          let containerBg = "bg-white/5";
 
           if (result.imageUrl) {
-            mediaHtml = `
-              <img src="${escapeHtml(result.imageUrl)}" alt="${escapeHtml(result.name)}" class="result-image"
-                   onerror="this.onerror=null;this.src='https://via.placeholder.com/400x400?text=${encodeURIComponent(result.name)}'">
-            `;
+            mediaHtml = `<img src="${escapeHtml(result.imageUrl)}" alt="${escapeHtml(result.name)}" class="w-full h-full object-cover"
+                          onerror="this.onerror=null;this.src='https://via.placeholder.com/400x400?text=${encodeURIComponent(result.name)}'">`;
           } else if (instaInfo && instaInfo.type === "post") {
-            mediaHtml = `<iframe src="${escapeHtml(instaInfo.embedUrl)}" loading="lazy" scrolling="no" allowtransparency="true" allow="encrypted-media"></iframe>`;
+            containerBg = "bg-white";
+            mediaHtml = `<iframe src="${escapeHtml(instaInfo.embedUrl)}" loading="lazy" scrolling="no" allowtransparency="true" allow="encrypted-media" class="w-full h-full border-0"></iframe>`;
           } else if (instaInfo && instaInfo.type === "profile") {
+            containerBg = "ig-gradient";
             mediaHtml = `
-              <div class="ig-logo">📸</div>
-              <div class="ig-handle">@${escapeHtml(instaInfo.username)}</div>
-            `;
-            footerHtml = `<a class="result-ig-link" href="${escapeHtml(instaInfo.profileUrl)}" target="_blank" rel="noopener noreferrer">View on Instagram ↗</a>`;
+              <div class="flex flex-col items-center justify-center gap-2 p-4 w-full h-full">
+                <div class="text-5xl">📸</div>
+                <div class="font-semibold break-words text-center">@${escapeHtml(instaInfo.username)}</div>
+              </div>`;
+            footerHtml = `<a class="block mt-3 text-sm text-fuchsia-400 hover:text-fuchsia-300 transition" href="${escapeHtml(instaInfo.profileUrl)}" target="_blank" rel="noopener noreferrer">View on Instagram ↗</a>`;
           } else {
-            mediaHtml = `<img src="https://via.placeholder.com/400x400?text=${encodeURIComponent(result.name)}" alt="${escapeHtml(result.name)}" class="result-image">`;
+            mediaHtml = `<img src="https://via.placeholder.com/400x400?text=${encodeURIComponent(result.name)}" alt="${escapeHtml(result.name)}" class="w-full h-full object-cover">`;
           }
-
-          const igClass =
-            !result.imageUrl && instaInfo && instaInfo.type === "profile"
-              ? " instagram"
-              : "";
 
           const card = document.createElement("div");
           card.className = "result-card";
           card.innerHTML = `
-            <div class="result-image-container${igClass}">
-              <div class="rank-badge ${rankClass}">#${rank}</div>
+            <div class="relative w-full aspect-square overflow-hidden ${containerBg} text-white">
+              <div class="absolute top-3 left-3 z-10 w-10 h-10 rounded-full flex items-center justify-center font-bold ${rankClass}">#${rank}</div>
               ${mediaHtml}
             </div>
-            <div class="result-info">
-              <div class="artist-name">${escapeHtml(result.name)}</div>
-              <div class="vote-stats">
-                <div class="vote-count">${result.votes} votes</div>
-                <div class="vote-percentage">${percentage}%</div>
+            <div class="p-5">
+              <div class="text-lg font-semibold mb-3">${escapeHtml(result.name)}</div>
+              <div class="flex justify-between items-center mb-3">
+                <div class="text-xl font-bold text-violet-400">${result.votes} votes</div>
+                <div class="text-slate-400">${percentage}%</div>
               </div>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: ${percentage}%"></div>
+              <div class="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-full transition-all duration-500" style="width: ${percentage}%"></div>
               </div>
               ${footerHtml}
-            </div>
-          `;
+            </div>`;
           grid.appendChild(card);
         });
 
@@ -647,46 +247,35 @@
 
       function buildTextResponsesSection(sectionData) {
         const section = document.createElement("div");
-        section.className = "additional-requests-section";
-
-        const title = document.createElement("div");
-        title.className = "category-title";
-        title.textContent = `💡 ${sectionData.label || "Responses"}`;
-        section.appendChild(title);
+        section.className = "rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm p-6 md:p-8";
+        section.innerHTML = `<h3 class="text-2xl font-bold text-violet-400 mb-6">💡 ${escapeHtml(sectionData.label || "Responses")}</h3>`;
 
         if (!sectionData.responses || sectionData.responses.length === 0) {
-          const empty = document.createElement("p");
-          empty.style.color = "#aaaaaa";
-          empty.textContent = "No responses yet.";
-          section.appendChild(empty);
+          section.innerHTML += `<p class="text-slate-400">No responses yet.</p>`;
           return section;
         }
 
+        const list = document.createElement("div");
+        list.className = "space-y-4";
         sectionData.responses.forEach((req) => {
           const timestamp = new Date(req.timestamp).toLocaleString();
           const item = document.createElement("div");
-          item.className = "request-item";
+          item.className = "rounded-xl bg-white/5 border-l-4 border-violet-500 p-5";
           item.innerHTML = `
-            <div class="request-text">"${escapeHtml(req.response)}"</div>
-            <div class="request-time">Submitted: ${escapeHtml(timestamp)}</div>
-          `;
-          section.appendChild(item);
+            <div class="text-base mb-2">"${escapeHtml(req.response)}"</div>
+            <div class="text-sm text-slate-500">Submitted: ${escapeHtml(timestamp)}</div>`;
+          list.appendChild(item);
         });
-
+        section.appendChild(list);
         return section;
       }
 
       loadResults();
-
       updateInterval = setInterval(loadResults, 5000);
 
       document.addEventListener("visibilitychange", () => {
-        if (document.hidden) {
-          clearInterval(updateInterval);
-        } else {
-          loadResults();
-          updateInterval = setInterval(loadResults, 5000);
-        }
+        if (document.hidden) clearInterval(updateInterval);
+        else { loadResults(); updateInterval = setInterval(loadResults, 5000); }
       });
     </script>
   </body>

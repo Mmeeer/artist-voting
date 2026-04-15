@@ -184,75 +184,6 @@
         return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
       }
 
-      // Best-effort fetch of an Instagram user's recent posts via public
-      // RSSHub mirrors. Returns [] on any failure — caller handles that.
-      // Images are proxied through wsrv.nl to bypass hotlink protection.
-      async function fetchInstagramPosts(username, maxPosts = 3) {
-        const cacheKey = `ig_posts_${username}`;
-        try {
-          const cached = sessionStorage.getItem(cacheKey);
-          if (cached) {
-            const data = JSON.parse(cached);
-            if (data.expires > Date.now()) return data.posts || [];
-          }
-        } catch {}
-
-        const endpoints = [
-          `https://rsshub.app/instagram/user/${encodeURIComponent(username)}`,
-          `https://rss.rssforever.com/instagram/user/${encodeURIComponent(username)}`,
-          `https://rsshub.rssforever.com/instagram/user/${encodeURIComponent(username)}`,
-        ];
-
-        for (const url of endpoints) {
-          try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 6000);
-            const res = await fetch(url, { signal: controller.signal });
-            clearTimeout(timeoutId);
-            if (!res.ok) continue;
-            const xml = await res.text();
-            const doc = new DOMParser().parseFromString(xml, "text/xml");
-            if (doc.querySelector("parsererror")) continue;
-            const items = Array.from(doc.querySelectorAll("item")).slice(0, maxPosts);
-            const posts = items
-              .map((item) => {
-                const desc = item.querySelector("description")?.textContent || "";
-                const imgMatch = desc.match(/<img[^>]*src=["']([^"']+)["']/i);
-                const link = item.querySelector("link")?.textContent || "";
-                if (!imgMatch) return null;
-                const raw = imgMatch[1];
-                const proxied = `https://wsrv.nl/?url=${encodeURIComponent(raw)}&w=300&h=300&fit=cover`;
-                return { image: proxied, link };
-              })
-              .filter(Boolean);
-            if (posts.length > 0) {
-              try {
-                sessionStorage.setItem(cacheKey, JSON.stringify({
-                  posts,
-                  expires: Date.now() + 60 * 60 * 1000,
-                }));
-              } catch {}
-              return posts;
-            }
-          } catch { /* try next endpoint */ }
-        }
-        return [];
-      }
-
-      function lazyLoadInstagramPosts() {
-        document.querySelectorAll(".ig-posts-slot:not([data-loaded])").forEach(async (slot) => {
-          slot.dataset.loaded = "1";
-          const username = slot.dataset.username;
-          if (!username) return;
-          const posts = await fetchInstagramPosts(username);
-          if (!posts.length) { slot.style.display = "none"; return; }
-          slot.innerHTML = posts.slice(0, 3).map((p) => `
-            <a href="${escapeHtml(p.link || "#")}" target="_blank" rel="noopener noreferrer" class="block aspect-square overflow-hidden rounded bg-black/20" onclick="event.stopPropagation();">
-              <img src="${escapeHtml(p.image)}" alt="" loading="lazy" class="w-full h-full object-cover" onerror="this.parentElement.style.display='none'">
-            </a>`).join("");
-        });
-      }
-
       function parseInstagramUrl(url) {
         if (!url) return null;
         try {
@@ -292,8 +223,8 @@
         } else if (instaInfo && instaInfo.type === "profile") {
           const username = instaInfo.username;
           mediaHtml = `
-            <div class="ig-gradient text-white p-4 flex flex-col items-center gap-3">
-              <div class="relative w-20 h-20 rounded-full border-[3px] border-white bg-white/20 overflow-hidden shadow-xl flex items-center justify-center text-4xl">
+            <div class="relative w-full aspect-square ig-gradient text-white p-4 flex flex-col items-center justify-center gap-3">
+              <div class="relative w-24 h-24 rounded-full border-[3px] border-white bg-white/20 overflow-hidden shadow-xl flex items-center justify-center text-4xl">
                 <span>📸</span>
                 <img
                   src="https://unavatar.io/instagram/${encodeURIComponent(username)}?fallback=false"
@@ -305,11 +236,6 @@
               <div class="text-center min-w-0 w-full">
                 <div class="font-bold break-words">@${escapeHtml(username)}</div>
                 <div class="text-[11px] opacity-80">on Instagram</div>
-              </div>
-              <div class="grid grid-cols-3 gap-1 w-full ig-posts-slot" data-username="${escapeHtml(username)}">
-                <div class="aspect-square rounded bg-black/20 animate-pulse"></div>
-                <div class="aspect-square rounded bg-black/20 animate-pulse"></div>
-                <div class="aspect-square rounded bg-black/20 animate-pulse"></div>
               </div>
             </div>`;
           footerHtml = `
@@ -375,7 +301,6 @@
 
           container.appendChild(wrapper);
         });
-        lazyLoadInstagramPosts();
       }
 
       function selectOption(section, optionName, card) {

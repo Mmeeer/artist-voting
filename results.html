@@ -92,6 +92,72 @@
         return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
       }
 
+      async function fetchInstagramPosts(username, maxPosts = 3) {
+        const cacheKey = `ig_posts_${username}`;
+        try {
+          const cached = sessionStorage.getItem(cacheKey);
+          if (cached) {
+            const data = JSON.parse(cached);
+            if (data.expires > Date.now()) return data.posts || [];
+          }
+        } catch {}
+
+        const endpoints = [
+          `https://rsshub.app/instagram/user/${encodeURIComponent(username)}`,
+          `https://rss.rssforever.com/instagram/user/${encodeURIComponent(username)}`,
+          `https://rsshub.rssforever.com/instagram/user/${encodeURIComponent(username)}`,
+        ];
+
+        for (const url of endpoints) {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (!res.ok) continue;
+            const xml = await res.text();
+            const doc = new DOMParser().parseFromString(xml, "text/xml");
+            if (doc.querySelector("parsererror")) continue;
+            const items = Array.from(doc.querySelectorAll("item")).slice(0, maxPosts);
+            const posts = items
+              .map((item) => {
+                const desc = item.querySelector("description")?.textContent || "";
+                const imgMatch = desc.match(/<img[^>]*src=["']([^"']+)["']/i);
+                const link = item.querySelector("link")?.textContent || "";
+                if (!imgMatch) return null;
+                const raw = imgMatch[1];
+                const proxied = `https://wsrv.nl/?url=${encodeURIComponent(raw)}&w=300&h=300&fit=cover`;
+                return { image: proxied, link };
+              })
+              .filter(Boolean);
+            if (posts.length > 0) {
+              try {
+                sessionStorage.setItem(cacheKey, JSON.stringify({
+                  posts,
+                  expires: Date.now() + 60 * 60 * 1000,
+                }));
+              } catch {}
+              return posts;
+            }
+          } catch { /* try next endpoint */ }
+        }
+        return [];
+      }
+
+      function lazyLoadInstagramPosts() {
+        document.querySelectorAll(".ig-posts-slot:not([data-loaded])").forEach(async (slot) => {
+          slot.dataset.loaded = "1";
+          const username = slot.dataset.username;
+          if (!username) return;
+          const posts = await fetchInstagramPosts(username);
+          if (!posts.length) { slot.style.display = "none"; return; }
+          slot.innerHTML = posts.slice(0, 3).map((p) => `
+            <a href="${escapeHtml(p.link || "#")}" target="_blank" rel="noopener noreferrer" class="block aspect-square overflow-hidden rounded bg-black/20">
+              <img src="${escapeHtml(p.image)}" alt="" loading="lazy" class="w-full h-full object-cover" onerror="this.parentElement.style.display='none'">
+            </a>`).join("");
+        });
+      }
+
       function parseInstagramUrl(url) {
         if (!url) return null;
         try {
@@ -169,6 +235,7 @@
           if (sectionData.type === "text-input") container.appendChild(buildTextResponsesSection(sectionData));
           else container.appendChild(buildOptionResultsSection(sectionData, totalVotes));
         }
+        lazyLoadInstagramPosts();
       }
 
       function buildOptionResultsSection(sectionData, totalVotes) {
@@ -199,34 +266,59 @@
           const rankClass = rankStyles[rank] || "bg-violet-500 text-white";
 
           const instaInfo = result.instagramUrl ? parseInstagramUrl(result.instagramUrl) : null;
-          let mediaHtml = "", footerHtml = "";
-          let containerBg = "bg-white/5";
+          let footerHtml = "";
 
+          let mediaBlock;
           if (result.imageUrl) {
-            mediaHtml = `<img src="${escapeHtml(result.imageUrl)}" alt="${escapeHtml(result.name)}" class="w-full h-full object-cover"
-                          onerror="this.onerror=null;this.src='https://via.placeholder.com/400x400?text=${encodeURIComponent(result.name)}'">`;
+            mediaBlock = `
+              <div class="relative w-full aspect-square overflow-hidden bg-white/5 text-white">
+                <div class="absolute top-3 left-3 z-10 w-10 h-10 rounded-full flex items-center justify-center font-bold ${rankClass}">#${rank}</div>
+                <img src="${escapeHtml(result.imageUrl)}" alt="${escapeHtml(result.name)}" class="w-full h-full object-cover"
+                     onerror="this.onerror=null;this.src='https://via.placeholder.com/400x400?text=${encodeURIComponent(result.name)}'">
+              </div>`;
           } else if (instaInfo && instaInfo.type === "post") {
-            containerBg = "bg-white";
-            mediaHtml = `<iframe src="${escapeHtml(instaInfo.embedUrl)}" loading="lazy" scrolling="no" allowtransparency="true" allow="encrypted-media" class="w-full h-full border-0"></iframe>`;
+            mediaBlock = `
+              <div class="relative w-full aspect-square overflow-hidden bg-white text-white">
+                <div class="absolute top-3 left-3 z-10 w-10 h-10 rounded-full flex items-center justify-center font-bold ${rankClass}">#${rank}</div>
+                <iframe src="${escapeHtml(instaInfo.embedUrl)}" loading="lazy" scrolling="no" allowtransparency="true" allow="encrypted-media" class="w-full h-full border-0"></iframe>
+              </div>`;
           } else if (instaInfo && instaInfo.type === "profile") {
-            containerBg = "ig-gradient";
-            mediaHtml = `
-              <div class="flex flex-col items-center justify-center gap-2 p-4 w-full h-full">
-                <div class="text-5xl">📸</div>
-                <div class="font-semibold break-words text-center">@${escapeHtml(instaInfo.username)}</div>
+            const username = instaInfo.username;
+            mediaBlock = `
+              <div class="relative w-full ig-gradient text-white p-5 flex flex-col items-center gap-3">
+                <div class="absolute top-3 left-3 z-10 w-10 h-10 rounded-full flex items-center justify-center font-bold ${rankClass}">#${rank}</div>
+                <div class="relative w-24 h-24 rounded-full border-[3px] border-white bg-white/20 overflow-hidden shadow-xl flex items-center justify-center text-4xl mt-2">
+                  <span>📸</span>
+                  <img
+                    src="https://unavatar.io/instagram/${encodeURIComponent(username)}?fallback=false"
+                    alt=""
+                    loading="lazy"
+                    class="absolute inset-0 w-full h-full object-cover"
+                    onerror="this.remove()" />
+                </div>
+                <div class="text-center min-w-0 w-full">
+                  <div class="font-bold break-words">@${escapeHtml(username)}</div>
+                  <div class="text-xs opacity-80">on Instagram</div>
+                </div>
+                <div class="grid grid-cols-3 gap-1 w-full ig-posts-slot" data-username="${escapeHtml(username)}">
+                  <div class="aspect-square rounded bg-black/20 animate-pulse"></div>
+                  <div class="aspect-square rounded bg-black/20 animate-pulse"></div>
+                  <div class="aspect-square rounded bg-black/20 animate-pulse"></div>
+                </div>
               </div>`;
             footerHtml = `<a class="block mt-3 text-sm text-fuchsia-400 hover:text-fuchsia-300 transition" href="${escapeHtml(instaInfo.profileUrl)}" target="_blank" rel="noopener noreferrer">View on Instagram ↗</a>`;
           } else {
-            mediaHtml = `<img src="https://via.placeholder.com/400x400?text=${encodeURIComponent(result.name)}" alt="${escapeHtml(result.name)}" class="w-full h-full object-cover">`;
+            mediaBlock = `
+              <div class="relative w-full aspect-square overflow-hidden bg-white/5 text-white">
+                <div class="absolute top-3 left-3 z-10 w-10 h-10 rounded-full flex items-center justify-center font-bold ${rankClass}">#${rank}</div>
+                <img src="https://via.placeholder.com/400x400?text=${encodeURIComponent(result.name)}" alt="${escapeHtml(result.name)}" class="w-full h-full object-cover">
+              </div>`;
           }
 
           const card = document.createElement("div");
           card.className = "result-card";
           card.innerHTML = `
-            <div class="relative w-full aspect-square overflow-hidden ${containerBg} text-white">
-              <div class="absolute top-3 left-3 z-10 w-10 h-10 rounded-full flex items-center justify-center font-bold ${rankClass}">#${rank}</div>
-              ${mediaHtml}
-            </div>
+            ${mediaBlock}
             <div class="p-5">
               <div class="text-lg font-semibold mb-3">${escapeHtml(result.name)}</div>
               <div class="flex justify-between items-center mb-3">

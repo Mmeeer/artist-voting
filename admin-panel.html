@@ -379,6 +379,263 @@
         width: auto;
       }
 
+      /* Categories */
+      .category-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .category-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        border-radius: 25px;
+        font-size: 0.95em;
+      }
+
+      .category-chip .chip-delete {
+        background: none;
+        border: none;
+        color: #ff6b6b;
+        cursor: pointer;
+        font-size: 1.1em;
+        padding: 0;
+        line-height: 1;
+      }
+
+      .category-chip .chip-delete:hover {
+        color: #ff0000;
+      }
+
+      /* Artist gallery */
+      .artist-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+        gap: 16px;
+      }
+
+      .artist-tile {
+        background: rgba(255, 255, 255, 0.08);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .artist-tile-media {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        background: rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .artist-tile-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .artist-tile-media.instagram {
+        background: linear-gradient(
+          135deg,
+          #405de6 0%,
+          #833ab4 25%,
+          #c13584 50%,
+          #e1306c 75%,
+          #fd1d1d 100%
+        );
+        color: white;
+        font-size: 2.6em;
+      }
+
+      .artist-tile-body {
+        padding: 12px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        flex: 1;
+      }
+
+      .artist-tile-name {
+        font-weight: 600;
+        font-size: 1em;
+      }
+
+      .artist-tile-meta {
+        font-size: 0.8em;
+        color: #aaaaaa;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .artist-tile-meta .meta-tag {
+        background: rgba(255, 107, 53, 0.15);
+        color: #ff8c5a;
+        padding: 3px 8px;
+        border-radius: 10px;
+        font-size: 0.85em;
+      }
+
+      .artist-tile-actions {
+        display: flex;
+        gap: 6px;
+        margin-top: auto;
+      }
+
+      .artist-tile-actions button {
+        flex: 1;
+        padding: 6px 8px;
+        font-size: 0.8em;
+      }
+
+      .checkbox-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+      }
+
+      .checkbox-grid label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        padding: 6px 12px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9em;
+        margin: 0;
+      }
+
+      .checkbox-grid input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+      }
+
+      /* Artist picker for section builder */
+      .artist-picker {
+        background: rgba(0, 0, 0, 0.2);
+        border: 2px dashed rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        padding: 15px;
+        max-height: 360px;
+        overflow-y: auto;
+      }
+
+      .artist-picker-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+      }
+
+      .artist-pick-card {
+        background: rgba(255, 255, 255, 0.06);
+        border: 2px solid transparent;
+        border-radius: 10px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+        position: relative;
+      }
+
+      .artist-pick-card:hover {
+        border-color: rgba(255, 107, 53, 0.5);
+      }
+
+      .artist-pick-card.picked {
+        border-color: #ff6b35;
+        box-shadow: 0 0 12px rgba(255, 107, 53, 0.4);
+      }
+
+      .artist-pick-media {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        background: rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .artist-pick-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .artist-pick-media.instagram {
+        background: linear-gradient(
+          135deg,
+          #405de6 0%,
+          #833ab4 25%,
+          #c13584 50%,
+          #e1306c 75%,
+          #fd1d1d 100%
+        );
+        color: white;
+        font-size: 1.6em;
+      }
+
+      .artist-pick-name {
+        padding: 8px 10px;
+        font-size: 0.85em;
+        text-align: center;
+      }
+
+      .artist-pick-card .pick-check {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 22px;
+        height: 22px;
+        background: rgba(0, 0, 0, 0.55);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9em;
+        color: white;
+        opacity: 0;
+      }
+
+      .artist-pick-card.picked .pick-check {
+        opacity: 1;
+        background: #ff6b35;
+      }
+
+      .radio-group {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .radio-group label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin: 0;
+        cursor: pointer;
+      }
+
+      .radio-group input[type="radio"] {
+        width: auto;
+      }
+
+      .muted {
+        color: #888;
+        font-size: 0.85em;
+      }
+
       @media (max-width: 768px) {
         .stats-grid {
           grid-template-columns: 1fr;
@@ -387,6 +644,15 @@
         .company-card {
           flex-direction: column;
           align-items: flex-start;
+        }
+
+        .artist-gallery {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 12px;
+        }
+
+        .artist-picker-grid {
+          grid-template-columns: repeat(2, 1fr);
         }
       }
     </style>
@@ -427,11 +693,82 @@
         </div>
       </div>
 
+      <!-- Manage Categories -->
+      <div class="section">
+        <div class="section-title">Manage Categories</div>
+        <p style="color: #aaaaaa; margin-bottom: 20px">
+          Categories group your artists (e.g. Comedians, Singers, Dancers, Bands).
+        </p>
+
+        <form id="createCategoryForm" style="display: flex; gap: 10px; align-items: end; flex-wrap: wrap; margin-bottom: 25px;">
+          <div class="form-group" style="flex: 1; min-width: 200px; margin-bottom: 0;">
+            <label for="categoryName">Category Name</label>
+            <input type="text" id="categoryName" placeholder="e.g. Comedians" required />
+          </div>
+          <div class="form-group" style="width: 120px; margin-bottom: 0;">
+            <label for="categoryIcon">Icon</label>
+            <input type="text" id="categoryIcon" placeholder="🎤" maxlength="4" />
+          </div>
+          <button type="submit" class="btn" id="createCategoryBtn">Add Category</button>
+        </form>
+
+        <div id="categoriesList" class="category-chips">
+          <p style="color: #aaaaaa">Loading categories...</p>
+        </div>
+      </div>
+
+      <!-- Manage Artists -->
+      <div class="section">
+        <div class="section-title">Manage Artists</div>
+        <p style="color: #aaaaaa; margin-bottom: 20px">
+          Create reusable artist profiles. Provide an image URL OR an Instagram URL (or both).
+          These artists can be added to any voting session.
+        </p>
+
+        <form id="createArtistForm" style="margin-bottom: 30px;">
+          <div class="form-group">
+            <label for="artistName">Artist Name *</label>
+            <input type="text" id="artistName" placeholder="Artist or band name" required />
+          </div>
+          <div class="form-group">
+            <label for="artistImage">Image URL</label>
+            <input type="text" id="artistImage" placeholder="https://..." />
+            <div class="muted">Public image URL (optional if Instagram URL is provided)</div>
+          </div>
+          <div class="form-group">
+            <label for="artistInstagram">Instagram URL</label>
+            <input type="text" id="artistInstagram" placeholder="https://www.instagram.com/username or post URL" />
+            <div class="muted">Profile or post URL (optional if Image URL is provided)</div>
+          </div>
+          <div class="form-group">
+            <label>Categories</label>
+            <div id="artistCategoriesCheckboxes" class="checkbox-grid">
+              <p style="color: #aaaaaa">Loading categories...</p>
+            </div>
+            <div class="muted">Pick one or more categories this artist belongs to.</div>
+          </div>
+          <button type="submit" class="btn" id="createArtistBtn">Save Artist</button>
+          <button type="button" class="btn btn-secondary" id="cancelEditArtistBtn" style="display:none;">Cancel</button>
+        </form>
+
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+          <input type="text" id="artistSearch" placeholder="Search artists by name..." style="flex: 1; min-width: 200px;" />
+          <select id="artistFilterCategory" style="min-width: 180px;">
+            <option value="">All categories</option>
+          </select>
+        </div>
+
+        <div id="artistsGallery" class="artist-gallery">
+          <p style="color: #aaaaaa">Loading artists...</p>
+        </div>
+      </div>
+
       <!-- Create New Global Voting Session -->
       <div class="section">
         <div class="section-title">Create New Global Voting Session</div>
         <p style="color: #aaaaaa; margin-bottom: 20px">
           This will create ONE voting session for ALL companies. Previous sessions will be deactivated.
+          Each section is tied to a category of artists.
         </p>
         <form id="createVotingForm">
           <div class="form-group">
@@ -480,6 +817,9 @@
     <script>
       const API_URL = "https://clapcomedyclub.mn/artist/api";
       let sectionCounter = 0;
+      let allCategories = [];
+      let allArtists = [];
+      let editingArtistId = null;
 
       function getToken() {
         return localStorage.getItem("adminToken");
@@ -500,35 +840,388 @@
         }, 5000);
       }
 
+      function escapeHtml(str) {
+        if (str === undefined || str === null) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      async function apiFetch(path, options = {}) {
+        const opts = Object.assign({}, options);
+        opts.headers = Object.assign(
+          {
+            Authorization: `Bearer ${getToken()}`,
+          },
+          options.headers || {}
+        );
+        if (opts.body && !opts.headers["Content-Type"]) {
+          opts.headers["Content-Type"] = "application/json";
+        }
+        const response = await fetch(`${API_URL}${path}`, opts);
+        if (response.status === 401) {
+          logout();
+          throw new Error("Unauthorized");
+        }
+        return response;
+      }
+
+      // -------- Categories --------
+
+      async function loadCategories() {
+        try {
+          const response = await apiFetch("/admin/categories");
+          if (!response.ok) throw new Error("Failed to load categories");
+          allCategories = await response.json();
+          renderCategories();
+          renderArtistCategoryCheckboxes();
+          renderArtistFilterCategoryOptions();
+          // Re-render any open section-builder category dropdowns
+          document.querySelectorAll(".js-section-category").forEach((sel) => {
+            const current = sel.value;
+            populateCategorySelect(sel, current);
+          });
+        } catch (error) {
+          console.error("Error loading categories:", error);
+        }
+      }
+
+      function renderCategories() {
+        const container = document.getElementById("categoriesList");
+        if (!allCategories.length) {
+          container.innerHTML = `<p style="color: #aaaaaa">No categories yet. Add one above.</p>`;
+          return;
+        }
+        container.innerHTML = allCategories
+          .map(
+            (cat) => `
+              <div class="category-chip">
+                <span>${escapeHtml(cat.icon || "🏷️")}</span>
+                <span>${escapeHtml(cat.name)}</span>
+                <button type="button" class="chip-delete" title="Delete category" onclick="deleteCategory('${cat.id}', '${escapeHtml(
+              cat.name
+            )}')">✕</button>
+              </div>`
+          )
+          .join("");
+      }
+
+      async function deleteCategory(categoryId, name) {
+        if (!confirm(`Delete category "${name}"? Artists will keep their profiles but will be removed from this category.`)) return;
+        try {
+          const response = await apiFetch(`/admin/categories/${categoryId}`, { method: "DELETE" });
+          if (response.ok) {
+            showMessage("Category deleted", "success");
+            await loadCategories();
+            await loadArtists();
+          } else {
+            const data = await response.json();
+            showMessage(data.message || "Failed to delete category", "error");
+          }
+        } catch (error) {
+          console.error("Error deleting category:", error);
+        }
+      }
+
+      document.getElementById("createCategoryForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = document.getElementById("categoryName").value.trim();
+        const icon = document.getElementById("categoryIcon").value.trim();
+        if (!name) return;
+        const btn = document.getElementById("createCategoryBtn");
+        btn.disabled = true;
+        btn.textContent = "Adding...";
+        try {
+          const response = await apiFetch("/admin/categories", {
+            method: "POST",
+            body: JSON.stringify({ name, icon }),
+          });
+          const data = await response.json();
+          if (response.ok) {
+            showMessage("Category created", "success");
+            document.getElementById("categoryName").value = "";
+            document.getElementById("categoryIcon").value = "";
+            await loadCategories();
+          } else {
+            showMessage(data.message || "Failed to create category", "error");
+          }
+        } catch (error) {
+          showMessage("Failed to create category", "error");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Add Category";
+        }
+      });
+
+      // -------- Artists --------
+
+      function parseInstagramUrl(url) {
+        if (!url) return null;
+        try {
+          const u = new URL(url);
+          if (!u.hostname.includes("instagram.com")) return null;
+          const parts = u.pathname.split("/").filter(Boolean);
+          if (parts.length === 0) return null;
+          if (["p", "reel", "tv"].includes(parts[0]) && parts[1]) {
+            return {
+              type: "post",
+              kind: parts[0],
+              shortcode: parts[1],
+              embedUrl: `https://www.instagram.com/${parts[0]}/${parts[1]}/embed`,
+            };
+          }
+          return { type: "profile", username: parts[0] };
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function artistThumbHtml(artist) {
+        if (artist.imageUrl) {
+          return `<img src="${escapeHtml(
+            artist.imageUrl
+          )}" alt="${escapeHtml(artist.name)}" onerror="this.style.display='none'">`;
+        }
+        return `<span>📸</span>`;
+      }
+
+      function artistMediaClass(artist) {
+        return artist.imageUrl ? "" : "instagram";
+      }
+
+      function renderArtistCategoryCheckboxes() {
+        const container = document.getElementById("artistCategoriesCheckboxes");
+        if (!allCategories.length) {
+          container.innerHTML = `<p style="color: #aaaaaa">Create a category first.</p>`;
+          return;
+        }
+        container.innerHTML = allCategories
+          .map(
+            (cat) => `
+              <label>
+                <input type="checkbox" name="artistCategory" value="${cat.id}" />
+                ${escapeHtml(cat.icon || "🏷️")} ${escapeHtml(cat.name)}
+              </label>`
+          )
+          .join("");
+      }
+
+      function renderArtistFilterCategoryOptions() {
+        const select = document.getElementById("artistFilterCategory");
+        const current = select.value;
+        select.innerHTML =
+          `<option value="">All categories</option>` +
+          allCategories
+            .map(
+              (cat) =>
+                `<option value="${cat.id}">${escapeHtml(cat.icon || "")} ${escapeHtml(cat.name)}</option>`
+            )
+            .join("");
+        if (current) select.value = current;
+      }
+
+      async function loadArtists() {
+        try {
+          const search = document.getElementById("artistSearch").value.trim();
+          const categoryId = document.getElementById("artistFilterCategory").value;
+          const params = new URLSearchParams();
+          if (search) params.set("search", search);
+          if (categoryId) params.set("categoryId", categoryId);
+          const qs = params.toString();
+          const response = await apiFetch(`/admin/artists${qs ? `?${qs}` : ""}`);
+          if (!response.ok) throw new Error("Failed to load artists");
+          allArtists = await response.json();
+          renderArtists();
+        } catch (error) {
+          console.error("Error loading artists:", error);
+        }
+      }
+
+      function renderArtists() {
+        const container = document.getElementById("artistsGallery");
+        if (!allArtists.length) {
+          container.innerHTML = `<p style="color: #aaaaaa">No artists match. Add one above.</p>`;
+          return;
+        }
+
+        container.innerHTML = allArtists
+          .map((artist) => {
+            const catNames = (artist.categoryIds || [])
+              .map((cid) => {
+                const c = allCategories.find((k) => k.id === cid);
+                return c ? `${c.icon || ""} ${c.name}`.trim() : null;
+              })
+              .filter(Boolean);
+
+            const instaInfo = parseInstagramUrl(artist.instagramUrl);
+            const instaBadge = instaInfo
+              ? `<span class="meta-tag">📷 IG ${instaInfo.type === "post" ? "post" : "@" + instaInfo.username}</span>`
+              : "";
+
+            return `
+              <div class="artist-tile">
+                <div class="artist-tile-media ${artistMediaClass(artist)}">
+                  ${artistThumbHtml(artist)}
+                </div>
+                <div class="artist-tile-body">
+                  <div class="artist-tile-name">${escapeHtml(artist.name)}</div>
+                  <div class="artist-tile-meta">
+                    ${instaBadge}
+                    ${catNames.map((n) => `<span class="meta-tag">${escapeHtml(n)}</span>`).join("")}
+                  </div>
+                  <div class="artist-tile-actions">
+                    <button type="button" class="btn btn-secondary btn-small" onclick="startEditArtist('${artist.id}')">Edit</button>
+                    <button type="button" class="btn btn-danger btn-small" onclick="deleteArtist('${artist.id}', '${escapeHtml(
+              artist.name
+            )}')">Delete</button>
+                  </div>
+                </div>
+              </div>`;
+          })
+          .join("");
+      }
+
+      function startEditArtist(artistId) {
+        const artist = allArtists.find((a) => a.id === artistId);
+        if (!artist) return;
+        editingArtistId = artistId;
+        document.getElementById("artistName").value = artist.name;
+        document.getElementById("artistImage").value = artist.imageUrl || "";
+        document.getElementById("artistInstagram").value = artist.instagramUrl || "";
+        document.querySelectorAll('input[name="artistCategory"]').forEach((cb) => {
+          cb.checked = (artist.categoryIds || []).includes(cb.value);
+        });
+        document.getElementById("createArtistBtn").textContent = "Update Artist";
+        document.getElementById("cancelEditArtistBtn").style.display = "inline-block";
+        document.getElementById("createArtistForm").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function resetArtistForm() {
+        editingArtistId = null;
+        document.getElementById("createArtistForm").reset();
+        document.getElementById("createArtistBtn").textContent = "Save Artist";
+        document.getElementById("cancelEditArtistBtn").style.display = "none";
+      }
+
+      document.getElementById("cancelEditArtistBtn").addEventListener("click", resetArtistForm);
+
+      async function deleteArtist(artistId, name) {
+        if (!confirm(`Delete artist "${name}"? This won't affect already-published voting sessions.`)) return;
+        try {
+          const response = await apiFetch(`/admin/artists/${artistId}`, { method: "DELETE" });
+          if (response.ok) {
+            showMessage("Artist deleted", "success");
+            await loadArtists();
+          } else {
+            showMessage("Failed to delete artist", "error");
+          }
+        } catch (error) {
+          showMessage("Failed to delete artist", "error");
+        }
+      }
+
+      document.getElementById("createArtistForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const name = document.getElementById("artistName").value.trim();
+        const imageUrl = document.getElementById("artistImage").value.trim();
+        const instagramUrl = document.getElementById("artistInstagram").value.trim();
+        const categoryIds = Array.from(
+          document.querySelectorAll('input[name="artistCategory"]:checked')
+        ).map((cb) => cb.value);
+
+        if (!name) {
+          showMessage("Artist name is required", "error");
+          return;
+        }
+        if (!imageUrl && !instagramUrl) {
+          showMessage("Please provide an Image URL or Instagram URL", "error");
+          return;
+        }
+
+        const btn = document.getElementById("createArtistBtn");
+        btn.disabled = true;
+        const oldLabel = btn.textContent;
+        btn.textContent = editingArtistId ? "Updating..." : "Saving...";
+
+        try {
+          let response;
+          if (editingArtistId) {
+            response = await apiFetch(`/admin/artists/${editingArtistId}`, {
+              method: "PATCH",
+              body: JSON.stringify({ name, imageUrl, instagramUrl, categoryIds }),
+            });
+          } else {
+            response = await apiFetch("/admin/artists", {
+              method: "POST",
+              body: JSON.stringify({ name, imageUrl, instagramUrl, categoryIds }),
+            });
+          }
+
+          const data = await response.json();
+          if (response.ok) {
+            showMessage(editingArtistId ? "Artist updated" : "Artist saved", "success");
+            resetArtistForm();
+            await loadArtists();
+          } else {
+            showMessage(data.message || "Failed to save artist", "error");
+          }
+        } catch (error) {
+          showMessage("Failed to save artist", "error");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = oldLabel;
+        }
+      });
+
+      // Search / filter
+      let searchDebounce;
+      document.getElementById("artistSearch").addEventListener("input", () => {
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(loadArtists, 250);
+      });
+      document.getElementById("artistFilterCategory").addEventListener("change", loadArtists);
+
+      // -------- Session Builder --------
+
+      function populateCategorySelect(sel, selectedId) {
+        const placeholder = `<option value="">-- Select a category --</option>`;
+        const options = allCategories
+          .map(
+            (cat) =>
+              `<option value="${cat.id}">${escapeHtml(cat.icon || "")} ${escapeHtml(cat.name)}</option>`
+          )
+          .join("");
+        sel.innerHTML = placeholder + options;
+        if (selectedId) sel.value = selectedId;
+      }
+
       function addSection() {
         sectionCounter++;
+        const sid = sectionCounter;
         const container = document.getElementById("sectionsContainer");
         const sectionDiv = document.createElement("div");
         sectionDiv.className = "section-builder";
-        sectionDiv.dataset.sectionId = sectionCounter;
+        sectionDiv.dataset.sectionId = sid;
 
         sectionDiv.innerHTML = `
           <div class="section-builder-header">
-            <div class="section-builder-title">Section #${sectionCounter}</div>
-            <button type="button" class="btn btn-danger btn-small" onclick="removeSection(${sectionCounter})">
+            <div class="section-builder-title">Section #${sid}</div>
+            <button type="button" class="btn btn-danger btn-small" onclick="removeSection(${sid})">
               Remove Section
             </button>
           </div>
 
           <div class="form-group">
-            <label>Section ID *</label>
-            <input type="text" name="section-id-${sectionCounter}" placeholder="e.g., hosts, entertainment, suggestions" required />
-            <small style="color: #aaaaaa;">Unique identifier (no spaces, lowercase)</small>
-          </div>
-
-          <div class="form-group">
             <label>Section Label *</label>
-            <input type="text" name="section-label-${sectionCounter}" placeholder="e.g., Select a Host" required />
+            <input type="text" name="section-label-${sid}" placeholder="e.g., Vote for your favorite host" required />
           </div>
 
           <div class="form-group">
             <label>Section Type *</label>
-            <select name="section-type-${sectionCounter}" onchange="handleSectionTypeChange(${sectionCounter})" required>
+            <select name="section-type-${sid}" onchange="handleSectionTypeChange(${sid})" required>
               <option value="">-- Select Type --</option>
               <option value="single-select">Single Select (choose one)</option>
               <option value="multi-select">Multi Select (choose multiple)</option>
@@ -537,80 +1230,194 @@
           </div>
 
           <div class="form-group checkbox-group">
-            <input type="checkbox" name="section-required-${sectionCounter}" id="section-required-${sectionCounter}" checked />
-            <label for="section-required-${sectionCounter}" style="margin-bottom: 0;">Required</label>
+            <input type="checkbox" name="section-required-${sid}" id="section-required-${sid}" checked />
+            <label for="section-required-${sid}" style="margin-bottom: 0;">Required</label>
           </div>
 
-          <div id="section-options-${sectionCounter}" style="display: none;">
+          <div id="section-artist-config-${sid}" style="display: none;">
             <div class="form-group">
-              <label>Options (Name and Image URL)</label>
-              <div id="section-options-list-${sectionCounter}">
-                <div class="option-input-group">
-                  <input type="text" placeholder="Option name" />
-                  <input type="text" placeholder="Image URL (optional)" />
-                  <button type="button" class="btn btn-danger btn-small" onclick="this.parentElement.remove()">
-                    Remove
-                  </button>
-                </div>
+              <label>Category *</label>
+              <select class="js-section-category" name="section-category-${sid}" onchange="handleSectionCategoryChange(${sid})"></select>
+              <div class="muted">Artists from this category will populate the voting section.</div>
+            </div>
+
+            <div class="form-group">
+              <label>Which artists?</label>
+              <div class="radio-group">
+                <label>
+                  <input type="radio" name="section-mode-${sid}" value="all" checked onchange="handleSectionModeChange(${sid})" />
+                  Include all artists in category
+                </label>
+                <label>
+                  <input type="radio" name="section-mode-${sid}" value="pick" onchange="handleSectionModeChange(${sid})" />
+                  Pick artists manually
+                </label>
               </div>
-              <button type="button" class="btn btn-secondary btn-small" onclick="addOption(${sectionCounter})">
-                + Add Option
-              </button>
+            </div>
+
+            <div class="form-group" id="section-picker-wrap-${sid}" style="display:none;">
+              <label>Pick Artists</label>
+              <div class="artist-picker" id="section-picker-${sid}">
+                <p style="color:#aaaaaa;">Select a category to see artists.</p>
+              </div>
+            </div>
+
+            <div class="form-group" id="section-all-info-${sid}">
+              <div class="muted" id="section-all-info-text-${sid}">Select a category to preview.</div>
             </div>
           </div>
 
-          <div id="section-multi-config-${sectionCounter}" style="display: none;">
+          <div id="section-multi-config-${sid}" style="display: none;">
             <div class="form-group">
               <label>Minimum Selections</label>
-              <input type="number" name="section-min-${sectionCounter}" value="1" min="1" />
+              <input type="number" name="section-min-${sid}" value="1" min="1" />
             </div>
             <div class="form-group">
               <label>Maximum Selections</label>
-              <input type="number" name="section-max-${sectionCounter}" value="2" min="1" />
+              <input type="number" name="section-max-${sid}" value="2" min="1" />
             </div>
           </div>
         `;
 
         container.appendChild(sectionDiv);
+        populateCategorySelect(sectionDiv.querySelector(".js-section-category"), "");
       }
 
       function removeSection(sectionId) {
         const section = document.querySelector(`[data-section-id="${sectionId}"]`);
-        if (section) {
-          section.remove();
+        if (section) section.remove();
+      }
+
+      function handleSectionTypeChange(sid) {
+        const select = document.querySelector(`[name="section-type-${sid}"]`);
+        const artistConfig = document.getElementById(`section-artist-config-${sid}`);
+        const multiConfig = document.getElementById(`section-multi-config-${sid}`);
+
+        const isSelect = select.value === "single-select" || select.value === "multi-select";
+        artistConfig.style.display = isSelect ? "block" : "none";
+        multiConfig.style.display = select.value === "multi-select" ? "block" : "none";
+      }
+
+      function handleSectionCategoryChange(sid) {
+        const sel = document.querySelector(`[name="section-category-${sid}"]`);
+        const categoryId = sel.value;
+        const infoText = document.getElementById(`section-all-info-text-${sid}`);
+        const picker = document.getElementById(`section-picker-${sid}`);
+
+        if (!categoryId) {
+          if (infoText) infoText.textContent = "Select a category to preview.";
+          if (picker) picker.innerHTML = `<p style="color:#aaaaaa;">Select a category to see artists.</p>`;
+          return;
+        }
+
+        renderSectionArtistPicker(sid, categoryId);
+      }
+
+      function handleSectionModeChange(sid) {
+        const mode = document.querySelector(`[name="section-mode-${sid}"]:checked`).value;
+        const pickerWrap = document.getElementById(`section-picker-wrap-${sid}`);
+        const allInfo = document.getElementById(`section-all-info-${sid}`);
+        pickerWrap.style.display = mode === "pick" ? "block" : "none";
+        allInfo.style.display = mode === "all" ? "block" : "none";
+      }
+
+      async function renderSectionArtistPicker(sid, categoryId) {
+        const picker = document.getElementById(`section-picker-${sid}`);
+        const infoText = document.getElementById(`section-all-info-text-${sid}`);
+        picker.innerHTML = `<p style="color:#aaaaaa;">Loading artists...</p>`;
+
+        try {
+          const params = new URLSearchParams();
+          params.set("categoryId", categoryId);
+          const response = await apiFetch(`/admin/artists?${params.toString()}`);
+          const artists = await response.json();
+
+          if (!artists.length) {
+            picker.innerHTML = `<p style="color:#aaaaaa;">No artists in this category yet. Add artists above.</p>`;
+            if (infoText) infoText.textContent = "No artists in this category yet.";
+            return;
+          }
+
+          if (infoText) {
+            infoText.textContent = `All ${artists.length} artist(s) in this category will be shown in the voting session.`;
+          }
+
+          picker.innerHTML = `
+            <div class="artist-picker-grid">
+              ${artists
+                .map(
+                  (a) => `
+                <div class="artist-pick-card" data-artist-id="${a.id}" onclick="toggleArtistPick(this)">
+                  <div class="artist-pick-media ${a.imageUrl ? "" : "instagram"}">
+                    ${
+                      a.imageUrl
+                        ? `<img src="${escapeHtml(a.imageUrl)}" alt="${escapeHtml(a.name)}" onerror="this.style.display='none'">`
+                        : `<span>📸</span>`
+                    }
+                  </div>
+                  <div class="artist-pick-name">${escapeHtml(a.name)}</div>
+                  <div class="pick-check">✓</div>
+                </div>`
+                )
+                .join("")}
+            </div>
+          `;
+        } catch (error) {
+          console.error("Error loading picker artists:", error);
+          picker.innerHTML = `<p style="color:#ff6b6b;">Failed to load artists.</p>`;
         }
       }
 
-      function handleSectionTypeChange(sectionId) {
-        const select = document.querySelector(`[name="section-type-${sectionId}"]`);
-        const optionsDiv = document.getElementById(`section-options-${sectionId}`);
-        const multiConfigDiv = document.getElementById(`section-multi-config-${sectionId}`);
-
-        if (select.value === 'single-select' || select.value === 'multi-select') {
-          optionsDiv.style.display = 'block';
-        } else {
-          optionsDiv.style.display = 'none';
-        }
-
-        if (select.value === 'multi-select') {
-          multiConfigDiv.style.display = 'block';
-        } else {
-          multiConfigDiv.style.display = 'none';
-        }
+      function toggleArtistPick(card) {
+        card.classList.toggle("picked");
       }
 
-      function addOption(sectionId) {
-        const list = document.getElementById(`section-options-list-${sectionId}`);
-        const optionDiv = document.createElement("div");
-        optionDiv.className = "option-input-group";
-        optionDiv.innerHTML = `
-          <input type="text" placeholder="Option name" />
-          <input type="text" placeholder="Image URL (optional)" />
-          <button type="button" class="btn btn-danger btn-small" onclick="this.parentElement.remove()">
-            Remove
-          </button>
-        `;
-        list.appendChild(optionDiv);
+      async function collectSectionOptions(sid, section) {
+        const categorySel = document.querySelector(`[name="section-category-${sid}"]`);
+        const categoryId = categorySel.value;
+        if (!categoryId) {
+          throw new Error(`Please pick a category for "${section.label}"`);
+        }
+
+        const mode = document.querySelector(`[name="section-mode-${sid}"]:checked`).value;
+
+        let chosenArtists = [];
+        if (mode === "all") {
+          const response = await apiFetch(`/admin/artists?categoryId=${encodeURIComponent(categoryId)}`);
+          if (!response.ok) throw new Error(`Failed to load artists for "${section.label}"`);
+          chosenArtists = await response.json();
+        } else {
+          const pickedIds = Array.from(
+            document.querySelectorAll(`#section-picker-${sid} .artist-pick-card.picked`)
+          ).map((c) => c.dataset.artistId);
+          if (pickedIds.length === 0) {
+            throw new Error(`Please pick at least one artist for "${section.label}"`);
+          }
+          chosenArtists = allArtists.filter((a) => pickedIds.includes(a.id));
+          // If some picked artists aren't in allArtists (because filter is set), fetch directly
+          if (chosenArtists.length !== pickedIds.length) {
+            const response = await apiFetch(`/admin/artists?categoryId=${encodeURIComponent(categoryId)}`);
+            const list = await response.json();
+            chosenArtists = list.filter((a) => pickedIds.includes(a.id));
+          }
+        }
+
+        if (!chosenArtists.length) {
+          throw new Error(`No artists available for "${section.label}"`);
+        }
+
+        // De-duplicate by name (name is the vote key)
+        const seen = new Set();
+        const options = [];
+        for (const a of chosenArtists) {
+          if (seen.has(a.name)) continue;
+          seen.add(a.name);
+          const opt = { name: a.name, artistId: a.id };
+          if (a.imageUrl) opt.imageUrl = a.imageUrl;
+          if (a.instagramUrl) opt.instagramUrl = a.instagramUrl;
+          options.push(opt);
+        }
+        return options;
       }
 
       async function loadStats() {
@@ -851,72 +1658,91 @@
           }
         });
 
+      function generateSectionId() {
+        return (
+          "sec_" +
+          Math.random().toString(36).slice(2, 8) +
+          Date.now().toString(36).slice(-4)
+        );
+      }
+
       document
         .getElementById("createVotingForm")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
 
-          const title = document.getElementById("sessionTitle").value;
+          const title = document.getElementById("sessionTitle").value.trim();
           const sections = [];
 
-          // Collect all sections
           const sectionDivs = document.querySelectorAll(".section-builder");
 
-          for (const sectionDiv of sectionDivs) {
-            const sectionId = sectionDiv.dataset.sectionId;
+          try {
+            for (const sectionDiv of sectionDivs) {
+              const sectionId = sectionDiv.dataset.sectionId;
 
-            const id = document.querySelector(`[name="section-id-${sectionId}"]`).value.trim();
-            const label = document.querySelector(`[name="section-label-${sectionId}"]`).value.trim();
-            const type = document.querySelector(`[name="section-type-${sectionId}"]`).value;
-            const required = document.querySelector(`[name="section-required-${sectionId}"]`).checked;
+              const label = document
+                .querySelector(`[name="section-label-${sectionId}"]`)
+                .value.trim();
+              const type = document.querySelector(
+                `[name="section-type-${sectionId}"]`
+              ).value;
+              const required = document.querySelector(
+                `[name="section-required-${sectionId}"]`
+              ).checked;
 
-            if (!id || !label || !type) {
-              showMessage(`Please fill in all required fields for Section #${sectionId}`, "error");
-              return;
-            }
-
-            const section = {
-              id: id,
-              label: label,
-              type: type,
-              required: required
-            };
-
-            // Get options for select types
-            if (type === 'single-select' || type === 'multi-select') {
-              const optionsList = document.getElementById(`section-options-list-${sectionId}`);
-              const optionInputs = optionsList.querySelectorAll('.option-input-group');
-
-              section.options = [];
-              for (const optionInput of optionInputs) {
-                const inputs = optionInput.querySelectorAll('input');
-                const name = inputs[0].value.trim();
-                const imageUrl = inputs[1].value.trim();
-
-                if (name) {
-                  section.options.push({
-                    name: name,
-                    imageUrl: imageUrl || undefined
-                  });
-                }
-              }
-
-              if (section.options.length === 0) {
-                showMessage(`Please add at least one option for "${label}"`, "error");
+              if (!label || !type) {
+                showMessage(
+                  `Please fill in all required fields for Section #${sectionId}`,
+                  "error"
+                );
                 return;
               }
+
+              const section = {
+                id: generateSectionId(),
+                label,
+                type,
+                required,
+              };
+
+              if (type === "single-select" || type === "multi-select") {
+                section.options = await collectSectionOptions(sectionId, section);
+              }
+
+              if (type === "multi-select") {
+                const minInput = document.querySelector(
+                  `[name="section-min-${sectionId}"]`
+                );
+                const maxInput = document.querySelector(
+                  `[name="section-max-${sectionId}"]`
+                );
+                const min = parseInt(minInput.value) || 1;
+                const max = parseInt(maxInput.value) || 2;
+
+                if (min > max) {
+                  showMessage(
+                    `Min selections cannot exceed max for "${label}"`,
+                    "error"
+                  );
+                  return;
+                }
+                if (max > section.options.length) {
+                  showMessage(
+                    `Max selections (${max}) is larger than available artists (${section.options.length}) in "${label}"`,
+                    "error"
+                  );
+                  return;
+                }
+
+                section.minSelections = min;
+                section.maxSelections = max;
+              }
+
+              sections.push(section);
             }
-
-            // Get min/max for multi-select
-            if (type === 'multi-select') {
-              const minInput = document.querySelector(`[name="section-min-${sectionId}"]`);
-              const maxInput = document.querySelector(`[name="section-max-${sectionId}"]`);
-
-              section.minSelections = parseInt(minInput.value) || 1;
-              section.maxSelections = parseInt(maxInput.value) || 2;
-            }
-
-            sections.push(section);
+          } catch (err) {
+            showMessage(err.message || "Failed to validate sections", "error");
+            return;
           }
 
           if (sections.length === 0) {
@@ -929,12 +1755,8 @@
           btn.textContent = "Creating...";
 
           try {
-            const response = await fetch(`${API_URL}/admin/create-voting`, {
+            const response = await apiFetch("/admin/create-voting", {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${getToken()}`,
-              },
               body: JSON.stringify({ title, sections }),
             });
 
@@ -945,6 +1767,7 @@
               document.getElementById("createVotingForm").reset();
               document.getElementById("sectionsContainer").innerHTML = "";
               sectionCounter = 0;
+              addSection();
               loadCurrentSession();
               loadStats();
             } else {
@@ -1053,9 +1876,6 @@
         }
       }
 
-      // Initialize with one section
-      addSection();
-
       const token = getToken();
       if (!token) {
         window.location.href = "admin.html";
@@ -1064,13 +1884,17 @@
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        }).then((response) => {
+        }).then(async (response) => {
           if (!response.ok) {
             logout();
           } else {
+            await loadCategories();
+            await loadArtists();
             loadStats();
             loadCurrentSession();
             loadCompanies();
+            // Initialize with one section after categories are loaded
+            addSection();
             setInterval(() => {
               loadStats();
               loadCurrentSession();

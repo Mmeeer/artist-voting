@@ -24,8 +24,26 @@ const companySchema = new mongoose.Schema({
 
 const optionSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  imageUrl: { type: String }
+  imageUrl: { type: String },
+  instagramUrl: { type: String },
+  artistId: { type: String }
 }, { _id: false });
+
+const categorySchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true, index: true },
+  name: { type: String, required: true },
+  icon: { type: String, default: '' },
+  createdAt: { type: Date, default: Date.now }
+});
+
+const artistSchema = new mongoose.Schema({
+  id: { type: String, required: true, unique: true, index: true },
+  name: { type: String, required: true },
+  imageUrl: { type: String, default: '' },
+  instagramUrl: { type: String, default: '' },
+  categoryIds: { type: [String], default: [], index: true },
+  createdAt: { type: Date, default: Date.now }
+});
 
 const sectionSchema = new mongoose.Schema({
   id: { type: String, required: true },
@@ -62,6 +80,8 @@ const voteSchema = new mongoose.Schema({
 const Company = mongoose.model('Company', companySchema);
 const VotingSession = mongoose.model('VotingSession', votingSessionSchema);
 const Vote = mongoose.model('Vote', voteSchema);
+const Category = mongoose.model('Category', categorySchema);
+const Artist = mongoose.model('Artist', artistSchema);
 
 async function connectDB() {
   try {
@@ -281,6 +301,97 @@ app.post('/api/vote', async (req, res) => {
   }
 });
 
+// Shared helper: build a per-section results object from a voting session and a
+// list of vote documents. Keeps ordering of options stable with their definition
+// order in the section, then sorts by votes for select types.
+function buildResultsFromVotes(votingSession, voteDocs) {
+  const results = {};
+
+  votingSession.sections.forEach(section => {
+    if (section.type === 'text-input') {
+      results[section.id] = {
+        type: 'text-input',
+        label: section.label,
+        responses: []
+      };
+    } else {
+      results[section.id] = {
+        type: section.type,
+        label: section.label,
+        optionsMap: {},
+        optionsOrder: []
+      };
+
+      section.options.forEach(option => {
+        results[section.id].optionsMap[option.name] = {
+          name: option.name,
+          votes: 0,
+          imageUrl: option.imageUrl || '',
+          instagramUrl: option.instagramUrl || '',
+          artistId: option.artistId || ''
+        };
+        results[section.id].optionsOrder.push(option.name);
+      });
+    }
+  });
+
+  voteDocs.forEach(voteDoc => {
+    const voteData = voteDoc.votes instanceof Map
+      ? Object.fromEntries(voteDoc.votes)
+      : voteDoc.votes;
+
+    votingSession.sections.forEach(section => {
+      const sectionVote = voteData[section.id];
+      const bucket = results[section.id];
+      if (!bucket) return;
+
+      if (section.type === 'text-input') {
+        if (sectionVote && typeof sectionVote === 'string' && sectionVote.trim() !== '') {
+          bucket.responses.push({
+            response: sectionVote,
+            timestamp: voteDoc.timestamp
+          });
+        }
+      } else if (section.type === 'single-select') {
+        if (sectionVote && bucket.optionsMap[sectionVote]) {
+          bucket.optionsMap[sectionVote].votes++;
+        }
+      } else if (section.type === 'multi-select') {
+        if (Array.isArray(sectionVote)) {
+          sectionVote.forEach(opt => {
+            if (bucket.optionsMap[opt]) {
+              bucket.optionsMap[opt].votes++;
+            }
+          });
+        }
+      }
+    });
+  });
+
+  const formatted = {};
+  Object.entries(results).forEach(([sectionId, data]) => {
+    if (data.type === 'text-input') {
+      formatted[sectionId] = {
+        type: data.type,
+        label: data.label,
+        responses: data.responses
+      };
+    } else {
+      const options = data.optionsOrder
+        .map(name => data.optionsMap[name])
+        .filter(Boolean)
+        .sort((a, b) => b.votes - a.votes);
+      formatted[sectionId] = {
+        type: data.type,
+        label: data.label,
+        options
+      };
+    }
+  });
+
+  return formatted;
+}
+
 app.get('/api/results/:votingSessionId', async (req, res) => {
   try {
     const { votingSessionId } = req.params;
@@ -291,87 +402,7 @@ app.get('/api/results/:votingSessionId', async (req, res) => {
     }
 
     const allVotes = await Vote.find({ votingSessionId });
-
-    // Initialize results structure based on sections
-    const results = {};
-
-    votingSession.sections.forEach(section => {
-      if (section.type === 'text-input') {
-        results[section.id] = {
-          type: 'text-input',
-          label: section.label,
-          responses: []
-        };
-      } else {
-        results[section.id] = {
-          type: section.type,
-          label: section.label,
-          options: {}
-        };
-
-        section.options.forEach(option => {
-          results[section.id].options[option.name] = {
-            votes: 0,
-            imageUrl: option.imageUrl
-          };
-        });
-      }
-    });
-
-    // Count votes
-    allVotes.forEach(voteDoc => {
-      const voteData = voteDoc.votes instanceof Map ? Object.fromEntries(voteDoc.votes) : voteDoc.votes;
-
-      votingSession.sections.forEach(section => {
-        const sectionVote = voteData[section.id];
-
-        if (section.type === 'text-input') {
-          if (sectionVote && sectionVote.trim() !== '') {
-            results[section.id].responses.push({
-              response: sectionVote,
-              timestamp: voteDoc.timestamp
-            });
-          }
-        } else if (section.type === 'single-select') {
-          if (sectionVote && results[section.id].options[sectionVote]) {
-            results[section.id].options[sectionVote].votes++;
-          }
-        } else if (section.type === 'multi-select') {
-          if (Array.isArray(sectionVote)) {
-            sectionVote.forEach(option => {
-              if (results[section.id].options[option]) {
-                results[section.id].options[option].votes++;
-              }
-            });
-          }
-        }
-      });
-    });
-
-    // Format results
-    const formattedResults = {};
-
-    Object.entries(results).forEach(([sectionId, sectionData]) => {
-      if (sectionData.type === 'text-input') {
-        formattedResults[sectionId] = {
-          type: sectionData.type,
-          label: sectionData.label,
-          responses: sectionData.responses
-        };
-      } else {
-        formattedResults[sectionId] = {
-          type: sectionData.type,
-          label: sectionData.label,
-          options: Object.entries(sectionData.options)
-            .map(([name, data]) => ({
-              name,
-              votes: data.votes,
-              imageUrl: data.imageUrl
-            }))
-            .sort((a, b) => b.votes - a.votes)
-        };
-      }
-    });
+    const formattedResults = buildResultsFromVotes(votingSession, allVotes);
 
     res.json({
       active: votingSession.isActive,
@@ -401,87 +432,7 @@ app.get('/api/results/:votingSessionId/company/:companyId', async (req, res) => 
     }
 
     const companyVotes = await Vote.find({ votingSessionId, companyId });
-
-    // Initialize results structure based on sections
-    const results = {};
-
-    votingSession.sections.forEach(section => {
-      if (section.type === 'text-input') {
-        results[section.id] = {
-          type: 'text-input',
-          label: section.label,
-          responses: []
-        };
-      } else {
-        results[section.id] = {
-          type: section.type,
-          label: section.label,
-          options: {}
-        };
-
-        section.options.forEach(option => {
-          results[section.id].options[option.name] = {
-            votes: 0,
-            imageUrl: option.imageUrl
-          };
-        });
-      }
-    });
-
-    // Count votes
-    companyVotes.forEach(voteDoc => {
-      const voteData = voteDoc.votes instanceof Map ? Object.fromEntries(voteDoc.votes) : voteDoc.votes;
-
-      votingSession.sections.forEach(section => {
-        const sectionVote = voteData[section.id];
-
-        if (section.type === 'text-input') {
-          if (sectionVote && sectionVote.trim() !== '') {
-            results[section.id].responses.push({
-              response: sectionVote,
-              timestamp: voteDoc.timestamp
-            });
-          }
-        } else if (section.type === 'single-select') {
-          if (sectionVote && results[section.id].options[sectionVote]) {
-            results[section.id].options[sectionVote].votes++;
-          }
-        } else if (section.type === 'multi-select') {
-          if (Array.isArray(sectionVote)) {
-            sectionVote.forEach(option => {
-              if (results[section.id].options[option]) {
-                results[section.id].options[option].votes++;
-              }
-            });
-          }
-        }
-      });
-    });
-
-    // Format results
-    const formattedResults = {};
-
-    Object.entries(results).forEach(([sectionId, sectionData]) => {
-      if (sectionData.type === 'text-input') {
-        formattedResults[sectionId] = {
-          type: sectionData.type,
-          label: sectionData.label,
-          responses: sectionData.responses
-        };
-      } else {
-        formattedResults[sectionId] = {
-          type: sectionData.type,
-          label: sectionData.label,
-          options: Object.entries(sectionData.options)
-            .map(([name, data]) => ({
-              name,
-              votes: data.votes,
-              imageUrl: data.imageUrl
-            }))
-            .sort((a, b) => b.votes - a.votes)
-        };
-      }
-    });
+    const formattedResults = buildResultsFromVotes(votingSession, companyVotes);
 
     res.json({
       active: votingSession.isActive,
@@ -569,6 +520,215 @@ app.delete('/api/admin/companies/:companyId', authenticateAdmin, async (req, res
     });
   } catch (error) {
     console.error('Error deleting company:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Category management
+
+app.get('/api/admin/categories', authenticateAdmin, async (req, res) => {
+  try {
+    const categories = await Category.find().sort({ createdAt: -1 });
+    res.json(categories);
+  } catch (error) {
+    console.error('Error getting categories:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/admin/categories', authenticateAdmin, async (req, res) => {
+  try {
+    const { name, icon } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'Category name is required' });
+    }
+
+    const newCategory = new Category({
+      id: crypto.randomBytes(12).toString('hex'),
+      name: name.trim(),
+      icon: (icon || '').trim()
+    });
+
+    await newCategory.save();
+
+    res.json({
+      success: true,
+      message: 'Category created successfully',
+      category: newCategory
+    });
+  } catch (error) {
+    console.error('Error creating category:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.patch('/api/admin/categories/:categoryId', authenticateAdmin, async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+    const { name, icon } = req.body;
+
+    const category = await Category.findOne({ id: categoryId });
+    if (!category) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    if (typeof name === 'string' && name.trim()) category.name = name.trim();
+    if (typeof icon === 'string') category.icon = icon.trim();
+
+    await category.save();
+
+    res.json({
+      success: true,
+      message: 'Category updated successfully',
+      category
+    });
+  } catch (error) {
+    console.error('Error updating category:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.delete('/api/admin/categories/:categoryId', authenticateAdmin, async (req, res) => {
+  try {
+    const { categoryId } = req.params;
+
+    const category = await Category.findOne({ id: categoryId });
+    if (!category) {
+      return res.status(404).json({ message: 'Category not found' });
+    }
+
+    // Remove this category from any artist that references it
+    await Artist.updateMany(
+      { categoryIds: categoryId },
+      { $pull: { categoryIds: categoryId } }
+    );
+
+    await Category.deleteOne({ id: categoryId });
+
+    res.json({
+      success: true,
+      message: 'Category deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting category:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Artist management
+
+app.get('/api/admin/artists', authenticateAdmin, async (req, res) => {
+  try {
+    const { categoryId, search } = req.query;
+    const query = {};
+
+    if (categoryId) {
+      query.categoryIds = categoryId;
+    }
+    if (search && search.trim()) {
+      // Escape special regex characters
+      const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      query.name = { $regex: escaped, $options: 'i' };
+    }
+
+    const artists = await Artist.find(query).sort({ name: 1 });
+    res.json(artists);
+  } catch (error) {
+    console.error('Error getting artists:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.post('/api/admin/artists', authenticateAdmin, async (req, res) => {
+  try {
+    const { name, imageUrl, instagramUrl, categoryIds } = req.body;
+
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'Artist name is required' });
+    }
+
+    const cleanImage = (imageUrl || '').trim();
+    const cleanInsta = (instagramUrl || '').trim();
+
+    if (!cleanImage && !cleanInsta) {
+      return res.status(400).json({
+        message: 'Please provide either an image URL or an Instagram URL'
+      });
+    }
+
+    const newArtist = new Artist({
+      id: crypto.randomBytes(12).toString('hex'),
+      name: name.trim(),
+      imageUrl: cleanImage,
+      instagramUrl: cleanInsta,
+      categoryIds: Array.isArray(categoryIds) ? categoryIds.filter(Boolean) : []
+    });
+
+    await newArtist.save();
+
+    res.json({
+      success: true,
+      message: 'Artist created successfully',
+      artist: newArtist
+    });
+  } catch (error) {
+    console.error('Error creating artist:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.patch('/api/admin/artists/:artistId', authenticateAdmin, async (req, res) => {
+  try {
+    const { artistId } = req.params;
+    const { name, imageUrl, instagramUrl, categoryIds } = req.body;
+
+    const artist = await Artist.findOne({ id: artistId });
+    if (!artist) {
+      return res.status(404).json({ message: 'Artist not found' });
+    }
+
+    if (typeof name === 'string' && name.trim()) artist.name = name.trim();
+    if (typeof imageUrl === 'string') artist.imageUrl = imageUrl.trim();
+    if (typeof instagramUrl === 'string') artist.instagramUrl = instagramUrl.trim();
+    if (Array.isArray(categoryIds)) artist.categoryIds = categoryIds.filter(Boolean);
+
+    if (!artist.imageUrl && !artist.instagramUrl) {
+      return res.status(400).json({
+        message: 'Artist must have either an image URL or an Instagram URL'
+      });
+    }
+
+    await artist.save();
+
+    res.json({
+      success: true,
+      message: 'Artist updated successfully',
+      artist
+    });
+  } catch (error) {
+    console.error('Error updating artist:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+app.delete('/api/admin/artists/:artistId', authenticateAdmin, async (req, res) => {
+  try {
+    const { artistId } = req.params;
+
+    const artist = await Artist.findOne({ id: artistId });
+    if (!artist) {
+      return res.status(404).json({ message: 'Artist not found' });
+    }
+
+    await Artist.deleteOne({ id: artistId });
+
+    res.json({
+      success: true,
+      message: 'Artist deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting artist:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

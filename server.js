@@ -83,6 +83,13 @@ const Vote = mongoose.model('Vote', voteSchema);
 const Category = mongoose.model('Category', categorySchema);
 const Artist = mongoose.model('Artist', artistSchema);
 
+const instagramProfileSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true, index: true, lowercase: true },
+  data: { type: mongoose.Schema.Types.Mixed },
+  fetchedAt: { type: Date, default: Date.now, index: true },
+});
+const InstagramProfile = mongoose.model('InstagramProfile', instagramProfileSchema);
+
 async function connectDB() {
   try {
     await mongoose.connect(MONGODB_URI, {
@@ -917,13 +924,88 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
 });
 
 // Instagram profile lookup via Instagram's own web_profile_info endpoint.
-// This endpoint requires X-IG-App-ID and works unauthenticated for public
-// profiles. It's what the logged-out instagram.com website uses internally.
-// Results are cached in memory for IG_CACHE_TTL to avoid hammering Instagram
-// (and to sidestep their aggressive rate limits on datacenter IPs).
-const igCache = new Map();
-const IG_CACHE_TTL = 60 * 60 * 1000; // 1h on success
-const IG_NEG_TTL = 10 * 60 * 1000;   // 10min on failure (negative cache)
+// Requires X-IG-App-ID and works unauthenticated for public profiles.
+//
+// Caching has two layers:
+//   L1 in-memory: 1h positive hits — serves almost every request
+//   L2 MongoDB: 7 day max age, stale-while-error — if upstream 429s we
+//               fall back to the last successful fetch even if "expired"
+//
+// Meta aggressively rate-limits datacenter IPs, so the only way this
+// endpoint stays reliable is to do as few upstream calls as possible
+// and keep serving the last known data when they block us.
+const IG_L1 = new Map();
+const IG_L1_TTL = 60 * 60 * 1000;          // 1h
+const IG_L2_FRESH = 12 * 60 * 60 * 1000;   // 12h — treat Mongo as fresh
+const IG_L2_STALE = 7 * 24 * 60 * 60 * 1000; // 7d — still serve on error
+
+function igBrowserHeaders() {
+  return {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+    'Accept': '*/*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'X-IG-App-ID': '936619743392459',
+    'X-ASBD-ID': '129477',
+    'X-IG-WWW-Claim': '0',
+    'X-Requested-With': 'XMLHttpRequest',
+    'sec-ch-ua': '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"macOS"',
+    'sec-fetch-dest': 'empty',
+    'sec-fetch-mode': 'cors',
+    'sec-fetch-site': 'same-origin',
+    'Referer': 'https://www.instagram.com/',
+    'Origin': 'https://www.instagram.com',
+  };
+}
+
+function normalizeIgProfile(user) {
+  const posts = (user.edge_owner_to_timeline_media?.edges || [])
+    .slice(0, 3)
+    .map((e) => ({
+      image: e.node.thumbnail_src || e.node.display_url,
+      shortcode: e.node.shortcode,
+      postUrl: `https://www.instagram.com/p/${e.node.shortcode}/`,
+      isVideo: !!e.node.is_video,
+    }))
+    .filter((p) => p.image);
+  return {
+    username: user.username,
+    fullName: user.full_name || null,
+    profilePic: user.profile_pic_url_hd || user.profile_pic_url || null,
+    isPrivate: !!user.is_private,
+    followerCount: user.edge_followed_by?.count ?? null,
+    postCount: user.edge_owner_to_timeline_media?.count ?? null,
+    posts,
+  };
+}
+
+async function fetchIgFromUpstream(username) {
+  // Try the primary endpoint first, fall back to the www.instagram.com host
+  // which sometimes has different rate limits.
+  const endpoints = [
+    `https://i.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(username)}`,
+    `https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(username)}`,
+  ];
+  let lastErr = null;
+  for (const url of endpoints) {
+    try {
+      const upstream = await fetch(url, {
+        headers: igBrowserHeaders(),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (upstream.status === 429) { lastErr = { status: 429, msg: 'rate limited' }; continue; }
+      if (!upstream.ok) { lastErr = { status: upstream.status, msg: `upstream ${upstream.status}` }; continue; }
+      const json = await upstream.json();
+      const user = json && json.data && json.data.user;
+      if (!user) { lastErr = { status: 404, msg: 'user not found' }; continue; }
+      return { ok: true, data: normalizeIgProfile(user) };
+    } catch (err) {
+      lastErr = { status: 502, msg: err.message || 'fetch failed' };
+    }
+  }
+  return { ok: false, status: lastErr?.status || 502, error: lastErr?.msg || 'fetch failed' };
+}
 
 app.get('/api/instagram/:username', async (req, res) => {
   const username = String(req.params.username || '').trim().toLowerCase();
@@ -931,69 +1013,45 @@ app.get('/api/instagram/:username', async (req, res) => {
     return res.status(400).json({ error: 'invalid username' });
   }
 
-  const cached = igCache.get(username);
-  if (cached && cached.expires > Date.now()) {
-    res.set('X-Cache', 'HIT');
-    return cached.error
-      ? res.status(cached.status || 502).json({ error: cached.error, username })
-      : res.json(cached.data);
+  // L1: in-memory fresh cache
+  const l1 = IG_L1.get(username);
+  if (l1 && l1.expires > Date.now()) {
+    res.set('X-Cache', 'L1');
+    return res.json(l1.data);
   }
 
-  const cacheFailure = (status, error) => {
-    igCache.set(username, { error, status, expires: Date.now() + IG_NEG_TTL });
-    res.set('X-Cache', 'MISS');
-    return res.status(status).json({ error, username });
-  };
-
-  try {
-    const upstream = await fetch(
-      `https://i.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(username)}`,
-      {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
-          'X-IG-App-ID': '936619743392459',
-          'Accept': '*/*',
-          'Accept-Language': 'en-US,en;q=0.9',
-        },
-        signal: AbortSignal.timeout(8000),
-      }
-    );
-
-    if (!upstream.ok) {
-      return cacheFailure(upstream.status === 404 ? 404 : 502, `upstream ${upstream.status}`);
-    }
-
-    const json = await upstream.json();
-    const user = json && json.data && json.data.user;
-    if (!user) return cacheFailure(404, 'user not found');
-
-    const posts = (user.edge_owner_to_timeline_media?.edges || [])
-      .slice(0, 3)
-      .map((e) => ({
-        image: e.node.thumbnail_src || e.node.display_url,
-        shortcode: e.node.shortcode,
-        postUrl: `https://www.instagram.com/p/${e.node.shortcode}/`,
-        isVideo: !!e.node.is_video,
-      }))
-      .filter((p) => p.image);
-
-    const data = {
-      username: user.username,
-      fullName: user.full_name || null,
-      profilePic: user.profile_pic_url_hd || user.profile_pic_url || null,
-      isPrivate: !!user.is_private,
-      followerCount: user.edge_followed_by?.count ?? null,
-      postCount: user.edge_owner_to_timeline_media?.count ?? null,
-      posts,
-    };
-
-    igCache.set(username, { data, expires: Date.now() + IG_CACHE_TTL });
-    res.set('X-Cache', 'MISS');
-    return res.json(data);
-  } catch (err) {
-    console.error('instagram fetch error', username, err.message);
-    return cacheFailure(502, 'fetch failed');
+  // L2: Mongo cache — check freshness
+  let mongoDoc = null;
+  try { mongoDoc = await InstagramProfile.findOne({ username }); } catch {}
+  if (mongoDoc && Date.now() - mongoDoc.fetchedAt.getTime() < IG_L2_FRESH) {
+    IG_L1.set(username, { data: mongoDoc.data, expires: Date.now() + IG_L1_TTL });
+    res.set('X-Cache', 'L2');
+    return res.json(mongoDoc.data);
   }
+
+  // Upstream
+  const result = await fetchIgFromUpstream(username);
+  if (result.ok) {
+    try {
+      await InstagramProfile.findOneAndUpdate(
+        { username },
+        { username, data: result.data, fetchedAt: new Date() },
+        { upsert: true }
+      );
+    } catch (err) { console.error('ig mongo upsert err', err.message); }
+    IG_L1.set(username, { data: result.data, expires: Date.now() + IG_L1_TTL });
+    res.set('X-Cache', 'MISS');
+    return res.json(result.data);
+  }
+
+  // Upstream failed — serve stale Mongo data if we have anything under IG_L2_STALE
+  if (mongoDoc && Date.now() - mongoDoc.fetchedAt.getTime() < IG_L2_STALE) {
+    res.set('X-Cache', 'STALE');
+    return res.json(mongoDoc.data);
+  }
+
+  res.set('X-Cache', 'ERROR');
+  return res.status(result.status).json({ error: result.error, username });
 });
 
 app.get('/health', async (req, res) => {

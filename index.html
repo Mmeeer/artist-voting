@@ -9,66 +9,44 @@
       tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
     </script>
     <link href="https://rsms.me/inter/inter.css" rel="stylesheet" />
-    <style type="text/tailwindcss">
-      @layer components {
-        .artist-card {
-          @apply relative flex flex-col overflow-hidden rounded-2xl bg-white/5 border-2 border-transparent cursor-pointer transition-all duration-200 select-none;
-        }
-        .artist-card:hover {
-          @apply border-violet-500 -translate-y-1 shadow-xl shadow-violet-500/20;
-        }
-        .artist-card.selected {
-          @apply border-violet-500 bg-violet-500/15 shadow-xl shadow-violet-500/40;
-        }
-        .artist-card .selection-badge { @apply hidden; }
-        .artist-card.selected .selection-badge {
-          @apply flex absolute top-2 right-2 w-8 h-8 rounded-full bg-violet-500 text-white items-center justify-center font-bold shadow-lg z-10;
-        }
-        .ig-gradient {
-          background: linear-gradient(135deg, #405de6 0%, #833ab4 25%, #c13584 50%, #e1306c 75%, #fd1d1d 100%);
-        }
-      }
-    </style>
   </head>
-  <body class="min-h-screen bg-slate-950 text-slate-100 font-sans relative overflow-x-hidden">
-    <div class="pointer-events-none fixed inset-0 -z-10">
+  <body class="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased relative overflow-x-hidden">
+    <div aria-hidden="true" class="pointer-events-none fixed inset-0 -z-10">
       <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full bg-violet-600/15 blur-[140px]"></div>
       <div class="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full bg-fuchsia-600/10 blur-[120px]"></div>
     </div>
 
-    <div class="max-w-5xl mx-auto px-4 py-10 md:py-16">
-      <header class="text-center mb-10">
-        <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent mb-3">
-          🎉 EVENT VOTING
+    <main class="mx-auto max-w-5xl px-4 py-10 sm:py-16">
+      <header class="mb-12 text-center">
+        <h1 class="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl">
+          🎉 Event Voting
         </h1>
-        <p class="text-slate-400 text-lg">Help us plan the perfect celebration</p>
+        <p class="mt-3 text-lg text-slate-400">Help us plan the perfect celebration</p>
       </header>
 
-      <div id="loading" class="text-center py-20">
-        <div class="inline-block w-12 h-12 border-4 border-white/10 border-l-violet-500 rounded-full animate-spin"></div>
-        <p class="mt-5 text-lg text-slate-400">Loading event details...</p>
+      <div id="loading" class="py-20 text-center">
+        <div class="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-white/10 border-l-violet-500"></div>
+        <p class="mt-5 text-lg text-slate-400">Loading event details…</p>
       </div>
 
       <div id="content" class="hidden">
-        <div id="noVoting" class="hidden text-center py-20">
-          <h2 class="text-3xl font-bold text-violet-400 mb-4">No Active Voting Session</h2>
-          <p class="text-slate-400 text-lg mb-2">There is currently no active voting session for your company.</p>
-          <p class="text-slate-400 text-lg">Please check back later or contact your administrator.</p>
+        <div id="noVoting" class="hidden py-20 text-center">
+          <h2 class="mb-4 text-3xl font-bold text-violet-400">No Active Voting Session</h2>
+          <p class="mb-2 text-lg text-slate-400">There is currently no active voting session for your company.</p>
+          <p class="text-lg text-slate-400">Please check back later or contact your administrator.</p>
         </div>
 
         <div id="votingActive" class="hidden">
-          <div class="rounded-2xl bg-white/5 border-l-4 border-violet-500 p-6 mb-8 backdrop-blur-sm">
-            <h2 id="eventTitle" class="text-2xl font-bold text-violet-400 mb-3"></h2>
-            <div class="flex flex-wrap gap-5 text-slate-400">
-              <div>🏢 <span id="companyName"></span></div>
-              <div class="px-3 py-1 rounded-full bg-white/10 text-sm">
-                📊 <span id="totalVotes">0</span> votes cast
-              </div>
+          <section class="mb-8 rounded-2xl border-l-4 border-violet-500 bg-white/5 p-6 backdrop-blur-sm">
+            <h2 id="eventTitle" class="text-2xl font-bold text-violet-400"></h2>
+            <div class="mt-3 flex flex-wrap items-center gap-5 text-sm text-slate-400">
+              <div class="flex items-center gap-1.5">🏢 <span id="companyName" class="font-medium text-slate-300"></span></div>
+              <div class="rounded-full bg-white/10 px-3 py-1">📊 <span id="totalVotes">0</span> votes cast</div>
             </div>
-          </div>
+          </section>
 
-          <div id="cooldownMessage" class="hidden mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-300 text-center"></div>
-          <div id="errorMessage" class="hidden mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/40 text-rose-300 text-center"></div>
+          <div id="cooldownMessage" class="mb-6 hidden rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-center text-amber-300"></div>
+          <div id="errorMessage" class="mb-6 hidden rounded-xl border border-rose-500/40 bg-rose-500/10 p-4 text-center text-rose-300"></div>
 
           <form id="votingForm">
             <div id="sectionsContainer" class="space-y-6"></div>
@@ -76,28 +54,42 @@
             <button
               type="submit"
               id="submitBtn"
-              class="w-full mt-8 py-5 rounded-2xl text-lg font-bold bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:shadow-xl hover:shadow-violet-500/40 hover:-translate-y-0.5 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
+              class="mt-10 w-full rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 py-5 text-lg font-bold shadow-lg shadow-violet-500/20 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/40 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
             >
               🎊 Submit Your Vote
             </button>
           </form>
         </div>
 
-        <div id="successSection" class="hidden text-center py-20">
-          <div class="text-8xl mb-6">✅</div>
-          <h2 class="text-4xl font-bold text-violet-400 mb-4">Thank You!</h2>
-          <p class="text-slate-300 text-lg mb-6 max-w-xl mx-auto">
+        <div id="successSection" class="hidden py-20 text-center">
+          <div class="mb-6 text-8xl">✅</div>
+          <h2 class="mb-4 text-4xl font-bold text-violet-400">Thank You!</h2>
+          <p class="mx-auto mb-6 max-w-xl text-lg text-slate-300">
             Your vote has been successfully submitted. We're excited to plan an amazing celebration!
           </p>
-          <p class="text-slate-500">
-            You can vote again in <span id="cooldownTime">3 hours</span>
-          </p>
+          <p class="text-slate-500">You can vote again in <span id="cooldownTime">3 hours</span></p>
         </div>
       </div>
-    </div>
+    </main>
 
     <script>
       const API_URL = "https://clapcomedyclub.mn/artist/api";
+
+      // Shared card class string — every artist card uses these utilities.
+      // State toggled via data-selected attribute + Tailwind data variants.
+      const CARD_CLS = [
+        "group relative flex flex-col overflow-hidden rounded-2xl",
+        "border-2 border-white/10 bg-white/5",
+        "cursor-pointer select-none transition-all duration-200",
+        "hover:border-violet-400/60 hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-500/20",
+        "data-[selected=true]:border-violet-400 data-[selected=true]:bg-violet-500/10",
+        "data-[selected=true]:shadow-xl data-[selected=true]:shadow-violet-500/40",
+        "data-[selected=true]:ring-2 data-[selected=true]:ring-violet-400/40",
+      ].join(" ");
+
+      // 5-stop Instagram brand gradient via arbitrary Tailwind value.
+      const IG_GRADIENT = "bg-[linear-gradient(135deg,#405de6_0%,#833ab4_25%,#c13584_50%,#e1306c_75%,#fd1d1d_100%)]";
+
       let currentCompanyId = "";
       let currentVotingSession = null;
       let sectionValues = {};
@@ -153,9 +145,9 @@
         if (!currentCompanyId) {
           hide("loading"); show("content"); show("noVoting");
           $("noVoting").innerHTML = `
-            <h2 class="text-3xl font-bold text-violet-400 mb-4">Invalid URL</h2>
-            <p class="text-slate-400 text-lg mb-2">Company ID is missing from the URL.</p>
-            <p class="text-slate-400 text-lg">Please use the correct link provided by your administrator.</p>`;
+            <h2 class="mb-4 text-3xl font-bold text-violet-400">Invalid URL</h2>
+            <p class="mb-2 text-lg text-slate-400">Company ID is missing from the URL.</p>
+            <p class="text-lg text-slate-400">Please use the correct link provided by your administrator.</p>`;
           return;
         }
         try {
@@ -174,8 +166,8 @@
           console.error("Error loading voting:", err);
           hide("loading"); show("content"); show("noVoting");
           $("noVoting").innerHTML = `
-            <h2 class="text-3xl font-bold text-violet-400 mb-4">Error Loading Event</h2>
-            <p class="text-slate-400 text-lg">Failed to load event details. Please try again later.</p>`;
+            <h2 class="mb-4 text-3xl font-bold text-violet-400">Error Loading Event</h2>
+            <p class="text-lg text-slate-400">Failed to load event details. Please try again later.</p>`;
         }
       }
 
@@ -185,9 +177,7 @@
       }
 
       // Fetch Instagram profile (avatar + last 3 posts) from our backend,
-      // which proxies Instagram's own web_profile_info endpoint and caches
-      // results for an hour. Negative cache on failure so bad usernames
-      // don't hit the backend on every render.
+      // which proxies web_profile_info and caches in Mongo (stale-while-error).
       async function fetchInstagramProfile(username) {
         const cacheKey = `ig_profile_${username}`;
         try {
@@ -200,7 +190,7 @@
 
         try {
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000);
+          const timeoutId = setTimeout(() => controller.abort(), 12000);
           const res = await fetch(`${API_URL}/instagram/${encodeURIComponent(username)}`, { signal: controller.signal });
           clearTimeout(timeoutId);
           const profile = res.ok ? await res.json() : null;
@@ -217,30 +207,31 @@
       }
 
       function lazyLoadInstagramProfiles() {
-        document.querySelectorAll(".ig-profile-card:not([data-loaded])").forEach(async (card) => {
-          card.dataset.loaded = "1";
-          const username = card.dataset.username;
+        document.querySelectorAll("[data-ig-username]:not([data-ig-loaded])").forEach(async (card) => {
+          card.dataset.igLoaded = "1";
+          const username = card.dataset.igUsername;
           if (!username) return;
           const profile = await fetchInstagramProfile(username);
           if (!profile) {
-            card.querySelector(".ig-posts-slot")?.remove();
+            card.querySelector("[data-ig-posts]")?.remove();
             return;
           }
-          const avatarImg = card.querySelector(".ig-avatar-img");
+          const avatarImg = card.querySelector("[data-ig-avatar]");
           if (profile.profilePic && avatarImg) {
             avatarImg.src = profile.profilePic;
-            avatarImg.style.display = "";
+            avatarImg.classList.remove("hidden");
           }
-          if (profile.fullName) {
-            const nameEl = card.querySelector(".ig-fullname");
-            if (nameEl) { nameEl.textContent = profile.fullName; nameEl.classList.remove("hidden"); }
+          const nameEl = card.querySelector("[data-ig-fullname]");
+          if (profile.fullName && nameEl) {
+            nameEl.textContent = profile.fullName;
+            nameEl.classList.remove("hidden");
           }
-          const slot = card.querySelector(".ig-posts-slot");
+          const slot = card.querySelector("[data-ig-posts]");
           if (slot) {
             if (profile.posts && profile.posts.length) {
               slot.innerHTML = profile.posts.slice(0, 3).map((p) => `
-                <a href="${escapeHtml(p.postUrl)}" target="_blank" rel="noopener noreferrer" class="block aspect-square overflow-hidden rounded bg-black/20" onclick="event.stopPropagation();">
-                  <img src="${escapeHtml(p.image)}" alt="" loading="lazy" class="w-full h-full object-cover" onerror="this.parentElement.style.display='none'">
+                <a href="${escapeHtml(p.postUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" class="block aspect-square overflow-hidden rounded-lg bg-black/30 transition hover:scale-105">
+                  <img src="${escapeHtml(p.image)}" alt="" loading="lazy" class="h-full w-full object-cover" onerror="this.parentElement.style.display='none'" />
                 </a>`).join("");
             } else {
               slot.remove();
@@ -265,9 +256,12 @@
 
       function buildOptionCard(section, option) {
         const card = document.createElement("div");
-        card.className = "artist-card";
+        card.className = CARD_CLS;
         card.dataset.sectionId = section.id;
         card.dataset.optionName = option.name;
+        card.dataset.selected = "false";
+        card.setAttribute("role", "button");
+        card.setAttribute("tabindex", "0");
 
         const instaInfo = option.instagramUrl ? parseInstagramUrl(option.instagramUrl) : null;
         const hasImage = !!option.imageUrl;
@@ -276,54 +270,62 @@
 
         if (hasImage) {
           mediaHtml = `
-            <div class="relative w-full aspect-square bg-white/5 overflow-hidden">
-              <img src="${escapeHtml(option.imageUrl)}" alt="${escapeHtml(option.name)}" class="w-full h-full object-cover"
-                   onerror="this.onerror=null;this.src='https://via.placeholder.com/400x400?text=${encodeURIComponent(option.name)}'">
+            <div class="relative aspect-square w-full overflow-hidden bg-white/5">
+              <img src="${escapeHtml(option.imageUrl)}" alt="${escapeHtml(option.name)}" class="h-full w-full object-cover"
+                   onerror="this.onerror=null;this.src='https://via.placeholder.com/400x400?text=${encodeURIComponent(option.name)}'" />
             </div>`;
         } else if (instaInfo && instaInfo.type === "post") {
           mediaHtml = `
-            <div class="relative w-full aspect-square bg-white overflow-hidden">
-              <iframe src="${escapeHtml(instaInfo.embedUrl)}" loading="lazy" scrolling="no" allowtransparency="true" allow="encrypted-media" class="w-full h-full border-0"></iframe>
+            <div class="relative aspect-square w-full overflow-hidden bg-white">
+              <iframe src="${escapeHtml(instaInfo.embedUrl)}" loading="lazy" scrolling="no" allowtransparency="true" allow="encrypted-media" class="h-full w-full border-0"></iframe>
             </div>`;
         } else if (instaInfo && instaInfo.type === "profile") {
           const username = instaInfo.username;
           mediaHtml = `
-            <div class="ig-profile-card ig-gradient text-white p-4 flex flex-col items-center gap-3" data-username="${escapeHtml(username)}">
-              <div class="relative w-20 h-20 rounded-full border-[3px] border-white bg-white/30 overflow-hidden shadow-xl flex items-center justify-center text-3xl">
+            <div data-ig-username="${escapeHtml(username)}" class="${IG_GRADIENT} flex flex-col items-center gap-3 p-5 text-white">
+              <div class="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-[3px] border-white bg-white/30 text-3xl shadow-xl">
                 <span>📸</span>
-                <img class="ig-avatar-img absolute inset-0 w-full h-full object-cover" alt="" loading="lazy" style="display:none" onerror="this.style.display='none'">
+                <img data-ig-avatar alt="" loading="lazy" class="absolute inset-0 hidden h-full w-full object-cover" onerror="this.classList.add('hidden')" />
               </div>
-              <div class="text-center min-w-0 w-full">
-                <div class="font-bold break-words">@${escapeHtml(username)}</div>
-                <div class="ig-fullname hidden text-[11px] opacity-90 break-words"></div>
-                <div class="text-[11px] opacity-70 mt-0.5">on Instagram</div>
+              <div class="min-w-0 text-center">
+                <div class="break-words font-bold">@${escapeHtml(username)}</div>
+                <div data-ig-fullname class="hidden break-words text-xs opacity-90"></div>
+                <div class="mt-0.5 text-[11px] opacity-70">on Instagram</div>
               </div>
-              <div class="grid grid-cols-3 gap-1 w-full ig-posts-slot">
-                <div class="aspect-square rounded bg-black/20 animate-pulse"></div>
-                <div class="aspect-square rounded bg-black/20 animate-pulse"></div>
-                <div class="aspect-square rounded bg-black/20 animate-pulse"></div>
+              <div data-ig-posts class="grid w-full grid-cols-3 gap-1">
+                <div class="aspect-square animate-pulse rounded-lg bg-black/30"></div>
+                <div class="aspect-square animate-pulse rounded-lg bg-black/30"></div>
+                <div class="aspect-square animate-pulse rounded-lg bg-black/30"></div>
               </div>
             </div>`;
           footerHtml = `
-            <a class="block text-center bg-white/10 hover:bg-white/20 text-white text-xs py-2 border-t border-white/10 transition" href="${escapeHtml(instaInfo.profileUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">
+            <a href="${escapeHtml(instaInfo.profileUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" class="block border-t border-white/10 bg-white/5 py-2 text-center text-xs text-slate-300 transition hover:bg-white/10 hover:text-white">
               View on Instagram ↗
             </a>`;
         } else {
           mediaHtml = `
-            <div class="relative w-full aspect-square bg-white/5 overflow-hidden">
-              <img src="https://via.placeholder.com/400x400?text=${encodeURIComponent(option.name)}" alt="${escapeHtml(option.name)}" class="w-full h-full object-cover">
+            <div class="relative aspect-square w-full overflow-hidden bg-white/5">
+              <img src="https://via.placeholder.com/400x400?text=${encodeURIComponent(option.name)}" alt="${escapeHtml(option.name)}" class="h-full w-full object-cover" />
             </div>`;
         }
 
         card.innerHTML = `
           ${mediaHtml}
-          <div class="flex-1 flex items-center justify-center text-center font-semibold px-3 py-3 min-h-[48px]">${escapeHtml(option.name)}</div>
+          <div class="flex min-h-[52px] flex-1 items-center justify-center px-3 py-3 text-center text-sm font-semibold text-slate-100">
+            ${escapeHtml(option.name)}
+          </div>
           ${footerHtml}
-          <div class="selection-badge">✓</div>`;
+          <div class="absolute right-2 top-2 z-10 hidden h-8 w-8 items-center justify-center rounded-full bg-violet-500 font-bold text-white shadow-lg group-data-[selected=true]:flex">
+            ✓
+          </div>`;
 
+        const handleSelect = () => selectOption(section, option.name, card);
         card.addEventListener("click", (e) => {
-          if (e.target.closest("a")) return;
-          selectOption(section, option.name, card);
+          if (e.target.closest("a, iframe")) return;
+          handleSelect();
+        });
+        card.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleSelect(); }
         });
 
         return card;
@@ -333,33 +335,33 @@
         const container = $("sectionsContainer");
         container.innerHTML = "";
         sections.forEach((section, index) => {
-          const wrapper = document.createElement("div");
-          wrapper.className = "rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm p-6 md:p-8";
+          const wrapper = document.createElement("section");
+          wrapper.className = "rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm sm:p-8";
 
           const title = document.createElement("h3");
-          title.className = "text-2xl font-bold text-violet-400 mb-2";
+          title.className = "text-xl font-bold text-violet-400 sm:text-2xl";
           title.textContent = `${index + 1}. ${section.label}`;
           wrapper.appendChild(title);
 
           const subtitle = document.createElement("p");
-          subtitle.className = "text-slate-400 mb-6";
+          subtitle.className = "mt-1 mb-6 text-sm text-slate-400";
           if (section.type === "single-select") subtitle.textContent = `Choose one option${section.required ? " (required)" : " (optional)"}`;
-          else if (section.type === "multi-select") subtitle.textContent = `Choose ${section.minSelections}-${section.maxSelections} option(s)${section.required ? " (required)" : " (optional)"}`;
+          else if (section.type === "multi-select") subtitle.textContent = `Choose ${section.minSelections}–${section.maxSelections} option(s)${section.required ? " (required)" : " (optional)"}`;
           else if (section.type === "text-input") subtitle.textContent = `Enter your response${section.required ? " (required)" : " (optional)"}`;
           wrapper.appendChild(subtitle);
 
           if (section.type === "single-select" || section.type === "multi-select") {
             const grid = document.createElement("div");
-            grid.className = "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4";
+            grid.className = "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4";
             grid.id = `section-${section.id}`;
             section.options.forEach((opt) => grid.appendChild(buildOptionCard(section, opt)));
             wrapper.appendChild(grid);
             sectionValues[section.id] = section.type === "single-select" ? null : [];
           } else if (section.type === "text-input") {
             const textarea = document.createElement("textarea");
-            textarea.className = "w-full min-h-[120px] px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-violet-500 focus:bg-white/10 resize-y transition";
+            textarea.className = "min-h-[120px] w-full resize-y rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-violet-500 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-violet-500/30";
             textarea.id = `section-${section.id}`;
-            textarea.placeholder = "Share your thoughts here...";
+            textarea.placeholder = "Share your thoughts here…";
             textarea.addEventListener("input", (e) => { sectionValues[section.id] = e.target.value; });
             wrapper.appendChild(textarea);
             sectionValues[section.id] = "";
@@ -372,19 +374,19 @@
 
       function selectOption(section, optionName, card) {
         if (section.type === "single-select") {
-          document.querySelectorAll(`[data-section-id="${section.id}"]`).forEach((c) => c.classList.remove("selected"));
-          card.classList.add("selected");
+          document.querySelectorAll(`[data-section-id="${section.id}"]`).forEach((c) => c.setAttribute("data-selected", "false"));
+          card.setAttribute("data-selected", "true");
           sectionValues[section.id] = optionName;
         } else if (section.type === "multi-select") {
-          if (card.classList.contains("selected")) {
-            card.classList.remove("selected");
+          if (card.dataset.selected === "true") {
+            card.setAttribute("data-selected", "false");
             sectionValues[section.id] = sectionValues[section.id].filter((v) => v !== optionName);
           } else {
             if (sectionValues[section.id].length >= section.maxSelections) {
               showError(`You can select maximum ${section.maxSelections} option(s) for ${section.label}`);
               return;
             }
-            card.classList.add("selected");
+            card.setAttribute("data-selected", "true");
             sectionValues[section.id].push(optionName);
           }
         }
@@ -418,7 +420,7 @@
 
         const btn = $("submitBtn");
         btn.disabled = true;
-        btn.textContent = "Submitting...";
+        btn.textContent = "Submitting…";
 
         try {
           const res = await fetch(`${API_URL}/vote`, {

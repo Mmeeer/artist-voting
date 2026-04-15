@@ -922,14 +922,28 @@
 
       // -------- Instagram Cache Seeder --------
 
+      // Devtools-safe copy: navigator.clipboard requires document focus,
+      // which fails when the user is typing in the console. copy() is a
+      // DevTools-only global that always works; textarea+execCommand is
+      // the fallback; a console dump is the last resort.
       const IG_SEED_SNIPPET = `(async () => {
   const u = location.pathname.split('/').filter(Boolean)[0];
-  if (!u) return alert('Not on an Instagram profile page');
+  if (!u) { console.error('Not on an Instagram profile page'); return; }
   const r = await fetch('/api/v1/users/web_profile_info/?username=' + u, { headers: { 'X-IG-App-ID': '936619743392459' } });
+  if (!r.ok) { console.error('Fetch failed:', r.status); return; }
   const d = await r.json();
   const text = JSON.stringify({ username: u, raw: d });
-  await navigator.clipboard.writeText(text);
-  alert('✓ Copied ' + u + ' — paste into admin panel');
+  let copied = false;
+  try { copy(text); copied = true; } catch (e) {}
+  if (!copied) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px';
+    document.body.appendChild(ta); ta.select();
+    try { copied = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+  console.log('%c✓ @' + u + ' ' + (copied ? 'copied to clipboard' : 'copy FAILED — select the JSON below and copy it manually:'), 'color:#0f0;font-size:14px;font-weight:bold');
+  if (!copied) console.log(text);
 })();`;
 
       function renderSeedSnippet() {

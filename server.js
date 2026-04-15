@@ -70,7 +70,9 @@ const votingSessionSchema = new mongoose.Schema({
 
 const voteSchema = new mongoose.Schema({
   votingSessionId: { type: String, required: true, index: true },
-  companyId: { type: String, required: true, index: true },
+  // companyId is kept for backwards compatibility with existing data but is
+  // no longer required. New voting flows are session-based.
+  companyId: { type: String, index: true },
   votes: { type: Map, of: mongoose.Schema.Types.Mixed },
   timestamp: { type: Date, default: Date.now },
   ipAddress: { type: String },
@@ -141,6 +143,36 @@ app.get('/api/company/:companyId', async (req, res) => {
   }
 });
 
+// New session-based voting endpoint. Each session is addressable by its own id.
+app.get('/api/voting/session/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const votingSession = await VotingSession.findOne({ id: sessionId });
+
+    if (!votingSession) {
+      return res.status(404).json({ active: false, message: 'Voting session not found' });
+    }
+
+    if (!votingSession.isActive) {
+      return res.json({ active: false, message: 'Voting session is not active' });
+    }
+
+    const totalVotes = await getVoteCount(votingSession.id);
+
+    res.json({
+      active: true,
+      id: votingSession.id,
+      title: votingSession.title,
+      sections: votingSession.sections,
+      totalVotes
+    });
+  } catch (error) {
+    console.error('Error getting voting session:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Legacy company-based voting endpoint (kept for backwards compatibility).
 app.get('/api/voting/:companyId', async (req, res) => {
   try {
     const { companyId } = req.params;
@@ -182,9 +214,8 @@ app.post('/api/vote', async (req, res) => {
       return res.status(400).json({ message: 'Device ID is required' });
     }
 
-    const company = await Company.findOne({ id: companyId });
-    if (!company) {
-      return res.status(404).json({ message: 'Company not found' });
+    if (!votingSessionId) {
+      return res.status(400).json({ message: 'Voting session ID is required' });
     }
 
     const votingSession = await VotingSession.findOne({
@@ -282,7 +313,9 @@ app.post('/api/vote', async (req, res) => {
 
     const newVote = new Vote({
       votingSessionId,
-      companyId: companyId,
+      // companyId is optional — kept only for backwards compatibility with
+      // legacy links that still pass it.
+      companyId: companyId || undefined,
       votes: votes,
       ipAddress: req.ip || req.connection.remoteAddress,
       deviceId
@@ -788,9 +821,8 @@ app.post('/api/admin/create-voting', authenticateAdmin, async (req, res) => {
       }
     }
 
-    // Deactivate all previous voting sessions
-    await VotingSession.updateMany({}, { isActive: false });
-
+    // Multiple voting sessions can be active concurrently. Each session has
+    // its own shareable URL so admins can run different votes in parallel.
     const newVoting = new VotingSession({
       id: crypto.randomBytes(16).toString('hex'),
       title,
@@ -802,7 +834,7 @@ app.post('/api/admin/create-voting', authenticateAdmin, async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Global voting session created successfully',
+      message: 'Voting session created successfully',
       voting: newVoting
     });
   } catch (error) {
@@ -828,6 +860,80 @@ app.get('/api/admin/current-voting', authenticateAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Error getting current voting:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// List all voting sessions (active + inactive), each annotated with its vote count.
+app.get('/api/admin/sessions', authenticateAdmin, async (req, res) => {
+  try {
+    const sessions = await VotingSession.find().sort({ createdAt: -1 });
+    const ids = sessions.map((s) => s.id);
+
+    // Aggregate vote counts per session in one query.
+    const counts = await Vote.aggregate([
+      { $match: { votingSessionId: { $in: ids } } },
+      { $group: { _id: '$votingSessionId', count: { $sum: 1 } } }
+    ]);
+    const countMap = new Map(counts.map((c) => [c._id, c.count]));
+
+    const enriched = sessions.map((s) => ({
+      id: s.id,
+      title: s.title,
+      sections: s.sections,
+      isActive: s.isActive,
+      createdAt: s.createdAt,
+      totalVotes: countMap.get(s.id) || 0
+    }));
+
+    res.json(enriched);
+  } catch (error) {
+    console.error('Error listing voting sessions:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get one session by id (used by clone to pre-fill the builder).
+app.get('/api/admin/sessions/:sessionId', authenticateAdmin, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const session = await VotingSession.findOne({ id: sessionId });
+    if (!session) {
+      return res.status(404).json({ message: 'Voting session not found' });
+    }
+    const totalVotes = await getVoteCount(session.id);
+    res.json({
+      id: session.id,
+      title: session.title,
+      sections: session.sections,
+      isActive: session.isActive,
+      createdAt: session.createdAt,
+      totalVotes
+    });
+  } catch (error) {
+    console.error('Error getting voting session:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete a voting session and all of its votes.
+app.delete('/api/admin/sessions/:sessionId', authenticateAdmin, async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const session = await VotingSession.findOne({ id: sessionId });
+    if (!session) {
+      return res.status(404).json({ message: 'Voting session not found' });
+    }
+
+    await Vote.deleteMany({ votingSessionId: sessionId });
+    await VotingSession.deleteOne({ id: sessionId });
+
+    res.json({
+      success: true,
+      message: 'Voting session deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting voting session:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });
@@ -879,39 +985,19 @@ app.post('/api/admin/reset-voting/:votingSessionId', authenticateAdmin, async (r
 
 app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
   try {
-    const companies = await Company.find();
-    const currentVoting = await getCurrentVoting();
-    const stats = [];
-
-    if (!currentVoting) {
-      return res.json([]);
-    }
-
-    for (const company of companies) {
-      const companyVotes = await Vote.countDocuments({
-        votingSessionId: currentVoting.id,
-        companyId: company.id
-      });
-
-      stats.push({
-        company: {
-          id: company.id,
-          name: company.name,
-          createdAt: company.createdAt
-        },
-        votes: companyVotes
-      });
-    }
-
-    const totalVotes = await Vote.countDocuments({ votingSessionId: currentVoting.id });
+    const [totalSessions, activeSessions, totalVotes] = await Promise.all([
+      VotingSession.countDocuments({}),
+      VotingSession.countDocuments({ isActive: true }),
+      Vote.countDocuments({})
+    ]);
 
     res.json({
-      currentSession: currentVoting,
-      totalVotes,
-      companies: stats
+      totalSessions,
+      activeSessions,
+      totalVotes
     });
   } catch (error) {
-    console.error('Error getting all stats:', error);
+    console.error('Error getting stats:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

@@ -309,38 +309,6 @@
         margin-bottom: 5px;
       }
 
-      .company-list {
-        display: grid;
-        gap: 15px;
-      }
-
-      .company-card {
-        background: rgba(255, 255, 255, 0.08);
-        padding: 20px;
-        border-radius: 10px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 15px;
-      }
-
-      .company-info h3 {
-        font-size: 1.3em;
-        margin-bottom: 5px;
-      }
-
-      .company-info p {
-        color: #aaaaaa;
-        font-size: 0.9em;
-      }
-
-      .company-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
       .copy-btn {
         background: rgba(74, 222, 128, 0.2);
         border: 2px solid #4ade80;
@@ -636,14 +604,148 @@
         font-size: 0.85em;
       }
 
+      /* Cloned section: pre-filled options display */
+      .cloned-options-notice {
+        background: rgba(74, 222, 128, 0.1);
+        border: 2px solid rgba(74, 222, 128, 0.4);
+        border-radius: 8px;
+        padding: 12px 15px;
+        margin-bottom: 12px;
+        font-size: 0.9em;
+        color: #4ade80;
+      }
+
+      .cloned-options-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+      }
+
+      .cloned-option-card {
+        background: rgba(255, 255, 255, 0.06);
+        border: 2px solid rgba(255, 107, 53, 0.4);
+        border-radius: 10px;
+        overflow: hidden;
+        text-align: center;
+        position: relative;
+      }
+
+      .cloned-option-media {
+        width: 100%;
+        aspect-ratio: 1 / 1;
+        background: rgba(255, 255, 255, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .cloned-option-media img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .cloned-option-media.instagram {
+        background: linear-gradient(
+          135deg,
+          #405de6 0%,
+          #833ab4 25%,
+          #c13584 50%,
+          #e1306c 75%,
+          #fd1d1d 100%
+        );
+        color: white;
+        font-size: 1.6em;
+      }
+
+      .cloned-option-name {
+        padding: 8px;
+        font-size: 0.85em;
+      }
+
+      .cloned-option-remove {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        width: 22px;
+        height: 22px;
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 0.9em;
+        padding: 0;
+        line-height: 1;
+      }
+
+      /* Session list */
+      .session-list {
+        display: grid;
+        gap: 20px;
+      }
+
+      .session-card {
+        background: rgba(255, 255, 255, 0.06);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 20px;
+      }
+
+      .session-card.active {
+        border-color: #4ade80;
+      }
+
+      .session-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+      }
+
+      .session-card-title {
+        font-size: 1.3em;
+        color: #ff6b35;
+        font-weight: 600;
+      }
+
+      .session-card-meta {
+        font-size: 0.85em;
+        color: #aaaaaa;
+        margin-top: 4px;
+      }
+
+      .session-card-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .session-sections-preview {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 10px;
+        margin-top: 10px;
+      }
+
+      .session-section-preview {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 10px 12px;
+        font-size: 0.85em;
+      }
+
+      .session-section-preview strong {
+        color: #ff8c5a;
+        display: block;
+        margin-bottom: 4px;
+      }
+
       @media (max-width: 768px) {
         .stats-grid {
           grid-template-columns: 1fr;
-        }
-
-        .company-card {
-          flex-direction: column;
-          align-items: flex-start;
         }
 
         .artist-gallery {
@@ -673,22 +775,26 @@
       <div class="stats-grid" id="statsGrid">
         <div class="stat-card">
           <div class="stat-value">-</div>
-          <div class="stat-label">Total Companies</div>
+          <div class="stat-label">Total Sessions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">-</div>
+          <div class="stat-label">Active Sessions</div>
         </div>
         <div class="stat-card">
           <div class="stat-value">-</div>
           <div class="stat-label">Total Votes</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value">-</div>
-          <div class="stat-label">Session Status</div>
-        </div>
       </div>
 
-      <!-- Current Voting Session -->
+      <!-- Voting Sessions -->
       <div class="section">
-        <div class="section-title">Current Global Voting Session</div>
-        <div id="currentSessionContainer">
+        <div class="section-title">Voting Sessions</div>
+        <p style="color: #aaaaaa; margin-bottom: 20px">
+          Each session has its own shareable URL. Multiple sessions can be active
+          at the same time — share different URLs with different audiences.
+        </p>
+        <div id="sessionsListContainer">
           <p style="color: #aaaaaa">Loading...</p>
         </div>
       </div>
@@ -763,17 +869,22 @@
         </div>
       </div>
 
-      <!-- Create New Global Voting Session -->
-      <div class="section">
-        <div class="section-title">Create New Global Voting Session</div>
+      <!-- Create New Voting Session -->
+      <div class="section" id="createVotingSection">
+        <div class="section-title" id="createVotingSectionTitle">Create New Voting Session</div>
         <p style="color: #aaaaaa; margin-bottom: 20px">
-          This will create ONE voting session for ALL companies. Previous sessions will be deactivated.
-          Each section is tied to a category of artists.
+          Creates a brand new voting session with its own shareable URL. Multiple
+          sessions can run concurrently. Each section is tied to a category of artists.
         </p>
+        <div id="cloneBanner" style="display: none; background: rgba(74, 222, 128, 0.1); border: 2px solid #4ade80; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px;">
+          <strong style="color: #4ade80;">Cloning session.</strong>
+          <span style="color: #aaaaaa;">Options are pre-filled from the original session. Edit the title or sections as needed, then click "Create Voting Session" to save a new copy.</span>
+          <button type="button" class="btn btn-small btn-secondary" style="margin-left: 10px;" onclick="resetSessionBuilder()">Cancel clone</button>
+        </div>
         <form id="createVotingForm">
           <div class="form-group">
-            <label for="sessionTitle">Event Title *</label>
-            <input type="text" id="sessionTitle" placeholder="New Year's Eve 2025" required />
+            <label for="sessionTitle">Session Title *</label>
+            <input type="text" id="sessionTitle" placeholder="e.g. New Year's Eve 2025" required />
           </div>
 
           <div class="form-group">
@@ -785,33 +896,11 @@
           </div>
 
           <button type="submit" class="btn" id="createVotingBtn">
-            Create Global Voting Session
+            Create Voting Session
           </button>
         </form>
       </div>
 
-      <!-- Manage Companies -->
-      <div class="section">
-        <div class="section-title">Manage Companies</div>
-
-        <div style="margin-bottom: 30px;">
-          <h3 style="color: #ff6b35; margin-bottom: 15px;">Add New Company</h3>
-          <form id="createCompanyForm" style="display: flex; gap: 10px; align-items: end;">
-            <div class="form-group" style="flex: 1; margin-bottom: 0;">
-              <label for="companyName">Company Name</label>
-              <input type="text" id="companyName" placeholder="Enter company name" required />
-            </div>
-            <button type="submit" class="btn" id="createCompanyBtn">
-              Add Company
-            </button>
-          </form>
-        </div>
-
-        <h3 style="color: #ff6b35; margin-bottom: 15px;">All Companies</h3>
-        <div class="company-list" id="companiesList">
-          <p style="color: #aaaaaa">Loading companies...</p>
-        </div>
-      </div>
     </div>
 
     <script>
@@ -1373,7 +1462,27 @@
       }
 
       async function collectSectionOptions(sid, section) {
+        const sectionDiv = document.querySelector(`[data-section-id="${sid}"]`);
+
+        // Cloned sections carry their options directly on the DOM node.
+        if (sectionDiv && sectionDiv.dataset.cloned === "1") {
+          const opts = sectionDiv._cloneOptions || [];
+          if (!opts.length) {
+            throw new Error(`No options left for "${section.label}". Add some or switch to category picker.`);
+          }
+          return opts.map((o) => {
+            const out = { name: o.name };
+            if (o.imageUrl) out.imageUrl = o.imageUrl;
+            if (o.instagramUrl) out.instagramUrl = o.instagramUrl;
+            if (o.artistId) out.artistId = o.artistId;
+            return out;
+          });
+        }
+
         const categorySel = document.querySelector(`[name="section-category-${sid}"]`);
+        if (!categorySel) {
+          throw new Error(`Section "${section.label}" is missing category selection`);
+        }
         const categoryId = categorySel.value;
         if (!categoryId) {
           throw new Error(`Please pick a category for "${section.label}"`);
@@ -1422,11 +1531,7 @@
 
       async function loadStats() {
         try {
-          const response = await fetch(`${API_URL}/admin/stats`, {
-            headers: {
-              Authorization: `Bearer ${getToken()}`,
-            },
-          });
+          const response = await apiFetch("/admin/stats");
 
           if (!response.ok) {
             if (response.status === 401) {
@@ -1439,22 +1544,22 @@
           const data = await response.json();
           const statsGrid = document.getElementById("statsGrid");
 
-          const totalCompanies = data.companies ? data.companies.length : 0;
+          const totalSessions = data.totalSessions || 0;
+          const activeSessions = data.activeSessions || 0;
           const totalVotes = data.totalVotes || 0;
-          const sessionStatus = data.currentSession && data.currentSession.isActive ? "Active" : "Inactive";
 
           statsGrid.innerHTML = `
             <div class="stat-card">
-              <div class="stat-value">${totalCompanies}</div>
-              <div class="stat-label">Total Companies</div>
+              <div class="stat-value">${totalSessions}</div>
+              <div class="stat-label">Total Sessions</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">${activeSessions}</div>
+              <div class="stat-label">Active Sessions</div>
             </div>
             <div class="stat-card">
               <div class="stat-value">${totalVotes}</div>
               <div class="stat-label">Total Votes</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value">${sessionStatus}</div>
-              <div class="stat-label">Session Status</div>
             </div>
           `;
         } catch (error) {
@@ -1462,137 +1567,90 @@
         }
       }
 
-      async function loadCurrentSession() {
+      let allSessions = [];
+
+      async function loadSessions() {
         try {
-          const response = await fetch(`${API_URL}/admin/current-voting`, {
-            headers: {
-              Authorization: `Bearer ${getToken()}`,
-            },
-          });
+          const response = await apiFetch("/admin/sessions");
+          if (!response.ok) throw new Error("Failed to load sessions");
+          allSessions = await response.json();
+          renderSessions();
+        } catch (error) {
+          console.error("Error loading sessions:", error);
+        }
+      }
 
-          if (!response.ok) throw new Error("Failed to load session");
-
-          const data = await response.json();
-          const container = document.getElementById("currentSessionContainer");
-
-          if (!data.active) {
-            container.innerHTML = `
-              <div class="no-session">
-                <h3>No Active Voting Session</h3>
-                <p>Create a new global voting session below to get started.</p>
-              </div>
-            `;
-            return;
-          }
-
-          const session = data.session;
-          let sectionsHTML = '';
-
-          if (session.sections && session.sections.length > 0) {
-            sectionsHTML = session.sections.map(section => {
-              let details = `<p>Type: ${section.type}</p>`;
-              details += `<p>Required: ${section.required ? 'Yes' : 'No'}</p>`;
-
-              if (section.type === 'multi-select') {
-                details += `<p>Min: ${section.minSelections}, Max: ${section.maxSelections}</p>`;
-              }
-
-              if (section.options && section.options.length > 0) {
-                details += `<ul>${section.options.map(opt => `<li>${opt.name}</li>`).join('')}</ul>`;
-              }
-
-              return `
-                <div class="section-category">
-                  <h5>${section.label}</h5>
-                  ${details}
-                </div>
-              `;
-            }).join('');
-          }
-
+      function renderSessions() {
+        const container = document.getElementById("sessionsListContainer");
+        if (!allSessions.length) {
           container.innerHTML = `
-            <div class="current-session">
-              <div class="session-header">
-                <div class="session-info">
-                  <h3>${session.title}</h3>
-                  <p>🎫 Session ID: ${session.id}</p>
-                  <p>📊 Total Votes: ${data.totalVotes}</p>
-                  <p>📋 Sections: ${session.sections ? session.sections.length : 0}</p>
-                  <div style="margin-top: 10px;">
-                    <span class="status-badge ${session.isActive ? "status-active" : "status-inactive"}">
-                      ${session.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </div>
-                </div>
-                <div class="session-actions">
-                  <button class="btn btn-small copy-btn" onclick="copyResultsUrl('${session.id}')">Copy Results URL</button>
-                  <button class="btn btn-small btn-secondary" onclick="toggleSession('${session.id}', ${!session.isActive})">
-                    ${session.isActive ? "Deactivate" : "Activate"}
-                  </button>
-                  <button class="btn btn-small btn-danger" onclick="resetSession('${session.id}')">Reset All Votes</button>
-                </div>
-              </div>
-              <div class="sections-summary">
-                ${sectionsHTML}
-              </div>
+            <div class="no-session">
+              <h3>No Voting Sessions Yet</h3>
+              <p>Create a new voting session below to get started.</p>
             </div>
           `;
-        } catch (error) {
-          console.error("Error loading current session:", error);
+          return;
         }
-      }
 
-      async function loadCompanies() {
-        try {
-          const [companiesResponse, statsResponse] = await Promise.all([
-            fetch(`${API_URL}/admin/companies`, {
-              headers: { Authorization: `Bearer ${getToken()}` },
-            }),
-            fetch(`${API_URL}/admin/stats`, {
-              headers: { Authorization: `Bearer ${getToken()}` },
-            }),
-          ]);
+        container.innerHTML = `<div class="session-list">${allSessions
+          .map((session) => {
+            const sectionCount = session.sections ? session.sections.length : 0;
+            const previewHtml = (session.sections || [])
+              .slice(0, 6)
+              .map((s) => {
+                let meta = `Type: ${escapeHtml(s.type)}`;
+                if (s.type === "multi-select") {
+                  meta += ` · ${s.minSelections}-${s.maxSelections}`;
+                }
+                if (s.options && s.options.length) {
+                  meta += ` · ${s.options.length} option(s)`;
+                }
+                return `
+                  <div class="session-section-preview">
+                    <strong>${escapeHtml(s.label)}</strong>
+                    <span style="color:#aaa;">${meta}</span>
+                  </div>
+                `;
+              })
+              .join("");
 
-          if (!companiesResponse.ok) throw new Error("Failed to load companies");
-
-          const companies = await companiesResponse.json();
-          const stats = await statsResponse.json();
-          const companiesList = document.getElementById("companiesList");
-
-          if (companies.length === 0) {
-            companiesList.innerHTML = `<p style="color: #aaaaaa">No companies yet. Add one above!</p>`;
-            return;
-          }
-
-          companiesList.innerHTML = "";
-
-          companies.forEach((company) => {
-            const companyStats = stats.companies ? stats.companies.find((s) => s.company.id === company.id) : null;
-            const votes = companyStats ? companyStats.votes : 0;
-
-            const card = document.createElement("div");
-            card.className = "company-card";
-            card.innerHTML = `
-              <div class="company-info">
-                <h3>${company.name}</h3>
-                <p>Company ID: ${company.id}</p>
-                <p>Votes: ${votes}</p>
-              </div>
-              <div class="company-actions">
-                <button class="btn btn-small copy-btn" onclick="copyVotingUrl('${company.id}')">Copy Voting URL</button>
-                <button class="btn btn-small btn-secondary" onclick="viewCompanyResults('${company.id}')">View Results</button>
-                <button class="btn btn-small btn-danger" onclick="deleteCompany('${company.id}', '${company.name}')">Delete</button>
+            return `
+              <div class="session-card ${session.isActive ? "active" : ""}">
+                <div class="session-card-header">
+                  <div>
+                    <div class="session-card-title">${escapeHtml(session.title)}</div>
+                    <div class="session-card-meta">
+                      🎫 ${escapeHtml(session.id)} &nbsp;·&nbsp;
+                      📊 ${session.totalVotes} vote(s) &nbsp;·&nbsp;
+                      📋 ${sectionCount} section(s)
+                    </div>
+                    <div style="margin-top: 8px;">
+                      <span class="status-badge ${session.isActive ? "status-active" : "status-inactive"}">
+                        ${session.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="session-card-actions">
+                    <button class="btn btn-small copy-btn" onclick="copyVotingUrl('${session.id}')">Copy Vote URL</button>
+                    <button class="btn btn-small copy-btn" onclick="copyResultsUrl('${session.id}')">Copy Results URL</button>
+                    <button class="btn btn-small btn-secondary" onclick="viewResults('${session.id}')">View Results</button>
+                    <button class="btn btn-small btn-secondary" onclick="cloneSession('${session.id}')">Clone</button>
+                    <button class="btn btn-small btn-secondary" onclick="toggleSession('${session.id}')">
+                      ${session.isActive ? "Deactivate" : "Activate"}
+                    </button>
+                    <button class="btn btn-small btn-danger" onclick="resetSession('${session.id}')">Reset Votes</button>
+                    <button class="btn btn-small btn-danger" onclick="deleteSession('${session.id}', '${escapeHtml(session.title)}')">Delete</button>
+                  </div>
+                </div>
+                ${sectionCount ? `<div class="session-sections-preview">${previewHtml}</div>` : ""}
               </div>
             `;
-            companiesList.appendChild(card);
-          });
-        } catch (error) {
-          console.error("Error loading companies:", error);
-        }
+          })
+          .join("")}</div>`;
       }
 
-      function copyVotingUrl(companyId) {
-        const url = `${window.location.origin}/index.html?companyId=${companyId}`;
+      function copyVotingUrl(sessionId) {
+        const url = `${window.location.origin}/index.html?sessionId=${sessionId}`;
         navigator.clipboard.writeText(url).then(() => {
           showMessage("Voting URL copied to clipboard!", "success");
         });
@@ -1605,58 +1663,27 @@
         });
       }
 
-      function viewCompanyResults(companyId) {
-        fetch(`${API_URL}/admin/current-voting`, {
-          headers: { Authorization: `Bearer ${getToken()}` },
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.active) {
-              const url = `${window.location.origin}/results.html?sessionId=${data.session.id}&companyId=${companyId}`;
-              window.open(url, "_blank");
-            } else {
-              showMessage("No active session", "error");
-            }
-          });
+      function viewResults(sessionId) {
+        const url = `${window.location.origin}/results.html?sessionId=${sessionId}`;
+        window.open(url, "_blank");
       }
 
-      document
-        .getElementById("createCompanyForm")
-        .addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          const name = document.getElementById("companyName").value;
-          const btn = document.getElementById("createCompanyBtn");
-          btn.disabled = true;
-          btn.textContent = "Adding...";
-
-          try {
-            const response = await fetch(`${API_URL}/admin/create-company`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${getToken()}`,
-              },
-              body: JSON.stringify({ name }),
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-              showMessage("Company created successfully!", "success");
-              document.getElementById("companyName").value = "";
-              loadCompanies();
-              loadStats();
-            } else {
-              showMessage(data.message || "Failed to create company", "error");
-            }
-          } catch (error) {
-            showMessage("Failed to create company", "error");
-          } finally {
-            btn.disabled = false;
-            btn.textContent = "Add Company";
+      async function deleteSession(sessionId, title) {
+        if (!confirm(`Delete session "${title}"? This also deletes all of its votes. This action cannot be undone.`)) return;
+        try {
+          const response = await apiFetch(`/admin/sessions/${sessionId}`, { method: "DELETE" });
+          if (response.ok) {
+            showMessage("Session deleted", "success");
+            await loadSessions();
+            loadStats();
+          } else {
+            const data = await response.json().catch(() => ({}));
+            showMessage(data.message || "Failed to delete session", "error");
           }
-        });
+        } catch (error) {
+          showMessage("Failed to delete session", "error");
+        }
+      }
 
       function generateSectionId() {
         return (
@@ -1763,12 +1790,9 @@
             const data = await response.json();
 
             if (response.ok) {
-              showMessage("Global voting session created successfully!", "success");
-              document.getElementById("createVotingForm").reset();
-              document.getElementById("sectionsContainer").innerHTML = "";
-              sectionCounter = 0;
-              addSection();
-              loadCurrentSession();
+              showMessage("Voting session created successfully!", "success");
+              resetSessionBuilder();
+              loadSessions();
               loadStats();
             } else {
               showMessage(
@@ -1780,60 +1804,20 @@
             showMessage("Failed to create voting session", "error");
           } finally {
             btn.disabled = false;
-            btn.textContent = "Create Global Voting Session";
+            btn.textContent = "Create Voting Session";
           }
         });
 
-      async function deleteCompany(companyId, companyName) {
-        if (
-          !confirm(
-            `Are you sure you want to delete "${companyName}"? This will delete all votes from this company. This action cannot be undone.`
-          )
-        ) {
-          return;
-        }
-
+      async function toggleSession(sessionId) {
         try {
-          const response = await fetch(
-            `${API_URL}/admin/companies/${companyId}`,
-            {
-              method: "DELETE",
-              headers: {
-                Authorization: `Bearer ${getToken()}`,
-              },
-            }
+          const response = await apiFetch(
+            `/admin/voting/${sessionId}/toggle`,
+            { method: "PATCH" }
           );
 
           if (response.ok) {
-            showMessage("Company deleted successfully!", "success");
-            loadCompanies();
-            loadStats();
-          } else {
-            showMessage("Failed to delete company", "error");
-          }
-        } catch (error) {
-          showMessage("Failed to delete company", "error");
-        }
-      }
-
-      async function toggleSession(sessionId, activate) {
-        try {
-          const response = await fetch(
-            `${API_URL}/admin/voting/${sessionId}/toggle`,
-            {
-              method: "PATCH",
-              headers: {
-                Authorization: `Bearer ${getToken()}`,
-              },
-            }
-          );
-
-          if (response.ok) {
-            showMessage(
-              `Session ${activate ? "activated" : "deactivated"} successfully!`,
-              "success"
-            );
-            loadCurrentSession();
+            showMessage("Session toggled successfully", "success");
+            loadSessions();
             loadStats();
           } else {
             showMessage("Failed to toggle session", "error");
@@ -1853,27 +1837,196 @@
         }
 
         try {
-          const response = await fetch(
-            `${API_URL}/admin/reset-voting/${sessionId}`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${getToken()}`,
-              },
-            }
+          const response = await apiFetch(
+            `/admin/reset-voting/${sessionId}`,
+            { method: "POST" }
           );
 
           if (response.ok) {
             showMessage("All votes reset successfully!", "success");
-            loadCurrentSession();
+            loadSessions();
             loadStats();
-            loadCompanies();
           } else {
             showMessage("Failed to reset session", "error");
           }
         } catch (error) {
           showMessage("Failed to reset session", "error");
         }
+      }
+
+      // ---- Clone session ----
+
+      async function cloneSession(sessionId) {
+        try {
+          const response = await apiFetch(`/admin/sessions/${sessionId}`);
+          if (!response.ok) {
+            showMessage("Failed to load session for cloning", "error");
+            return;
+          }
+          const session = await response.json();
+          prefillSessionBuilder(session);
+          showMessage('Session cloned into the form. Edit and click "Create Voting Session" to save a copy.', "success");
+        } catch (error) {
+          console.error("Error cloning session:", error);
+          showMessage("Failed to clone session", "error");
+        }
+      }
+
+      function prefillSessionBuilder(session) {
+        // Clear the existing builder state.
+        document.getElementById("sectionsContainer").innerHTML = "";
+        sectionCounter = 0;
+
+        // Pre-fill the title with a "(copy)" suffix so users don't accidentally
+        // overwrite the original by reusing the same title.
+        document.getElementById("sessionTitle").value = `${session.title} (copy)`;
+
+        // Recreate each section in "clone mode" with pre-filled options.
+        (session.sections || []).forEach((section) => {
+          addClonedSection(section);
+        });
+
+        // Show the clone banner and scroll the builder into view.
+        const banner = document.getElementById("cloneBanner");
+        banner.style.display = "block";
+        document.getElementById("createVotingSectionTitle").textContent = "Clone Voting Session";
+        document.getElementById("createVotingSection").scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+
+      function resetSessionBuilder() {
+        document.getElementById("createVotingForm").reset();
+        document.getElementById("sectionsContainer").innerHTML = "";
+        sectionCounter = 0;
+        document.getElementById("cloneBanner").style.display = "none";
+        document.getElementById("createVotingSectionTitle").textContent = "Create New Voting Session";
+        addSection();
+      }
+
+      function addClonedSection(originalSection) {
+        addSection();
+        const sid = sectionCounter;
+        const sectionDiv = document.querySelector(`[data-section-id="${sid}"]`);
+        if (!sectionDiv) return;
+
+        // Mark it as cloned so collectSectionOptions uses the stored options.
+        sectionDiv.dataset.cloned = "1";
+
+        // Populate basic fields.
+        sectionDiv.querySelector(`[name="section-label-${sid}"]`).value =
+          originalSection.label || "";
+        const typeSelect = sectionDiv.querySelector(`[name="section-type-${sid}"]`);
+        typeSelect.value = originalSection.type || "";
+        handleSectionTypeChange(sid);
+
+        const requiredCb = sectionDiv.querySelector(`[name="section-required-${sid}"]`);
+        requiredCb.checked = !!originalSection.required;
+
+        if (originalSection.type === "multi-select") {
+          sectionDiv.querySelector(`[name="section-min-${sid}"]`).value =
+            originalSection.minSelections || 1;
+          sectionDiv.querySelector(`[name="section-max-${sid}"]`).value =
+            originalSection.maxSelections || 1;
+        }
+
+        // For select types, replace the category/picker UI with a read-only
+        // display of the cloned options and store them on the DOM node.
+        if (
+          originalSection.type === "single-select" ||
+          originalSection.type === "multi-select"
+        ) {
+          const options = originalSection.options || [];
+          sectionDiv._cloneOptions = options.map((o) => ({
+            name: o.name,
+            imageUrl: o.imageUrl || undefined,
+            instagramUrl: o.instagramUrl || undefined,
+            artistId: o.artistId || undefined,
+          }));
+          renderClonedOptions(sid, sectionDiv);
+        }
+      }
+
+      function renderClonedOptions(sid, sectionDiv) {
+        const artistConfig = document.getElementById(`section-artist-config-${sid}`);
+        if (!artistConfig) return;
+
+        const options = sectionDiv._cloneOptions || [];
+
+        artistConfig.innerHTML = `
+          <div class="cloned-options-notice">
+            ✨ Cloned from original session — ${options.length} option(s) pre-filled.
+            <button type="button" class="btn btn-small btn-secondary" style="margin-left: 10px;" onclick="resetClonedSectionToPicker(${sid})">Switch to category picker</button>
+          </div>
+          <div class="cloned-options-grid">
+            ${options
+              .map((opt, idx) => {
+                const media = opt.imageUrl
+                  ? `<img src="${escapeHtml(opt.imageUrl)}" alt="${escapeHtml(opt.name)}" onerror="this.style.display='none'">`
+                  : `<span>📸</span>`;
+                const cls = opt.imageUrl ? "" : "instagram";
+                return `
+                  <div class="cloned-option-card">
+                    <button type="button" class="cloned-option-remove" title="Remove" onclick="removeClonedOption(${sid}, ${idx})">✕</button>
+                    <div class="cloned-option-media ${cls}">${media}</div>
+                    <div class="cloned-option-name">${escapeHtml(opt.name)}</div>
+                  </div>
+                `;
+              })
+              .join("")}
+          </div>
+        `;
+      }
+
+      function removeClonedOption(sid, idx) {
+        const sectionDiv = document.querySelector(`[data-section-id="${sid}"]`);
+        if (!sectionDiv || !sectionDiv._cloneOptions) return;
+        sectionDiv._cloneOptions.splice(idx, 1);
+        renderClonedOptions(sid, sectionDiv);
+      }
+
+      function resetClonedSectionToPicker(sid) {
+        const sectionDiv = document.querySelector(`[data-section-id="${sid}"]`);
+        if (!sectionDiv) return;
+        // Drop cloned state and rebuild the default picker UI for this section.
+        delete sectionDiv.dataset.cloned;
+        sectionDiv._cloneOptions = null;
+
+        const artistConfig = document.getElementById(`section-artist-config-${sid}`);
+        artistConfig.innerHTML = `
+          <div class="form-group">
+            <label>Category *</label>
+            <select class="js-section-category" name="section-category-${sid}" onchange="handleSectionCategoryChange(${sid})"></select>
+            <div class="muted">Artists from this category will populate the voting section.</div>
+          </div>
+
+          <div class="form-group">
+            <label>Which artists?</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" name="section-mode-${sid}" value="all" checked onchange="handleSectionModeChange(${sid})" />
+                Include all artists in category
+              </label>
+              <label>
+                <input type="radio" name="section-mode-${sid}" value="pick" onchange="handleSectionModeChange(${sid})" />
+                Pick artists manually
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group" id="section-picker-wrap-${sid}" style="display:none;">
+            <label>Pick Artists</label>
+            <div class="artist-picker" id="section-picker-${sid}">
+              <p style="color:#aaaaaa;">Select a category to see artists.</p>
+            </div>
+          </div>
+
+          <div class="form-group" id="section-all-info-${sid}">
+            <div class="muted" id="section-all-info-text-${sid}">Select a category to preview.</div>
+          </div>
+        `;
+        populateCategorySelect(
+          sectionDiv.querySelector(".js-section-category"),
+          ""
+        );
       }
 
       const token = getToken();
@@ -1891,14 +2044,12 @@
             await loadCategories();
             await loadArtists();
             loadStats();
-            loadCurrentSession();
-            loadCompanies();
+            loadSessions();
             // Initialize with one section after categories are loaded
             addSection();
             setInterval(() => {
               loadStats();
-              loadCurrentSession();
-              loadCompanies();
+              loadSessions();
             }, 10000);
           }
         });

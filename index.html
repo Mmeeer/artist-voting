@@ -427,7 +427,6 @@
           <div class="show-info">
             <div class="show-title" id="eventTitle"></div>
             <div class="show-details">
-              <div>🏢 <span id="companyName"></span></div>
               <div class="vote-counter">
                 📊 <span id="totalVotes">0</span> votes cast
               </div>
@@ -463,7 +462,7 @@
 
     <script>
       const API_URL = "https://clapcomedyclub.mn/artist/api";
-      let currentCompanyId = "";
+      let currentSessionId = "";
       let currentVotingSession = null;
       let sectionValues = {};
 
@@ -536,15 +535,15 @@
       }
 
       async function loadVoting() {
-        currentCompanyId = getQueryParam("companyId");
+        currentSessionId = getQueryParam("sessionId");
 
-        if (!currentCompanyId) {
+        if (!currentSessionId) {
           document.getElementById("loading").style.display = "none";
           document.getElementById("content").style.display = "block";
           document.getElementById("noVoting").style.display = "block";
           document.getElementById("noVoting").innerHTML = `
             <h2>Invalid URL</h2>
-            <p>Company ID is missing from the URL.</p>
+            <p>Session ID is missing from the URL.</p>
             <p>Please use the correct link provided by your administrator.</p>
           `;
           return;
@@ -552,7 +551,7 @@
 
         try {
           const response = await fetch(
-            `${API_URL}/voting/${currentCompanyId}`
+            `${API_URL}/voting/session/${encodeURIComponent(currentSessionId)}`
           );
           const data = await response.json();
 
@@ -567,7 +566,6 @@
           currentVotingSession = data;
 
           document.getElementById("eventTitle").textContent = data.title;
-          document.getElementById("companyName").textContent = data.companyName;
           document.getElementById("totalVotes").textContent = data.totalVotes;
 
           renderSections(data.sections);
@@ -832,7 +830,6 @@
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              companyId: currentCompanyId,
               votingSessionId: currentVotingSession.id,
               deviceId: deviceId,
               votes: sectionValues,

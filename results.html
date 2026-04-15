@@ -434,8 +434,8 @@
       }
 
       function goBackToVoting() {
-        if (companyId) {
-          window.location.href = `index.html?companyId=${companyId}`;
+        if (votingSessionId) {
+          window.location.href = `index.html?sessionId=${votingSessionId}`;
         } else {
           window.history.back();
         }

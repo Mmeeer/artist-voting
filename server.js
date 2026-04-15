@@ -935,7 +935,9 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
 // endpoint stays reliable is to do as few upstream calls as possible
 // and keep serving the last known data when they block us.
 const IG_L1 = new Map();
-const IG_L1_TTL = 60 * 60 * 1000;          // 1h
+const IG_L1_NEG = new Map();
+const IG_L1_TTL = 60 * 60 * 1000;          // 1h positive
+const IG_L1_NEG_TTL = 90 * 1000;           // 90s negative — stop hammering upstream
 const IG_L2_FRESH = 12 * 60 * 60 * 1000;   // 12h — treat Mongo as fresh
 const IG_L2_STALE = 7 * 24 * 60 * 60 * 1000; // 7d — still serve on error
 
@@ -1029,6 +1031,18 @@ app.get('/api/instagram/:username', async (req, res) => {
     return res.json(mongoDoc.data);
   }
 
+  // Short-circuit if we recently failed — avoids hammering upstream on
+  // every page view when Meta is rate-limiting us.
+  const neg = IG_L1_NEG.get(username);
+  if (neg && neg.expires > Date.now()) {
+    if (mongoDoc && Date.now() - mongoDoc.fetchedAt.getTime() < IG_L2_STALE) {
+      res.set('X-Cache', 'STALE');
+      return res.json(mongoDoc.data);
+    }
+    res.set('X-Cache', 'NEG');
+    return res.status(neg.status).json({ error: neg.error, username });
+  }
+
   // Upstream
   const result = await fetchIgFromUpstream(username);
   if (result.ok) {
@@ -1040,9 +1054,13 @@ app.get('/api/instagram/:username', async (req, res) => {
       );
     } catch (err) { console.error('ig mongo upsert err', err.message); }
     IG_L1.set(username, { data: result.data, expires: Date.now() + IG_L1_TTL });
+    IG_L1_NEG.delete(username);
     res.set('X-Cache', 'MISS');
     return res.json(result.data);
   }
+
+  // Record the failure for a short window so we don't re-hit upstream
+  IG_L1_NEG.set(username, { status: result.status, error: result.error, expires: Date.now() + IG_L1_NEG_TTL });
 
   // Upstream failed — serve stale Mongo data if we have anything under IG_L2_STALE
   if (mongoDoc && Date.now() - mongoDoc.fetchedAt.getTime() < IG_L2_STALE) {
@@ -1052,6 +1070,79 @@ app.get('/api/instagram/:username', async (req, res) => {
 
   res.set('X-Cache', 'ERROR');
   return res.status(result.status).json({ error: result.error, username });
+});
+
+// Admin-only: manually seed the Instagram cache for a username. Because Meta
+// rate-limits datacenter IPs, the only reliable way to populate this cache is
+// from a residential browser session. The workflow:
+//   1. admin opens https://www.instagram.com/<username>/ in their browser
+//   2. opens devtools → console, pastes the one-liner we document in the
+//      admin panel, which calls web_profile_info same-origin and copies the
+//      resulting JSON to the clipboard
+//   3. admin pastes the JSON into the admin panel and hits "Seed"
+//   4. this endpoint normalizes and stores it in Mongo for 12h fresh / 7d stale
+app.post('/api/admin/instagram/seed', authenticateAdmin, async (req, res) => {
+  const username = String(req.body.username || '').trim().toLowerCase();
+  if (!username || !/^[a-zA-Z0-9_.]{1,30}$/.test(username)) {
+    return res.status(400).json({ error: 'invalid username' });
+  }
+  const raw = req.body.raw;
+  if (!raw || typeof raw !== 'object') {
+    return res.status(400).json({ error: 'raw Instagram API response required in body' });
+  }
+
+  // Accept either the full { data: { user: {...} } } envelope or just the
+  // user object itself, or our already-normalized shape.
+  let data;
+  try {
+    if (raw.data && raw.data.user) {
+      data = normalizeIgProfile(raw.data.user);
+    } else if (raw.user) {
+      data = normalizeIgProfile(raw.user);
+    } else if (raw.edge_owner_to_timeline_media || raw.profile_pic_url || raw.profile_pic_url_hd) {
+      data = normalizeIgProfile(raw);
+    } else if (raw.profilePic !== undefined || raw.posts !== undefined) {
+      data = raw; // already normalized
+    } else {
+      return res.status(400).json({ error: 'unrecognized JSON shape — paste the full web_profile_info response' });
+    }
+  } catch (err) {
+    return res.status(400).json({ error: 'failed to parse: ' + err.message });
+  }
+
+  if (!data.username) data.username = username;
+
+  try {
+    await InstagramProfile.findOneAndUpdate(
+      { username },
+      { username, data, fetchedAt: new Date() },
+      { upsert: true }
+    );
+  } catch (err) {
+    console.error('ig seed mongo upsert err', err.message);
+    return res.status(500).json({ error: 'db upsert failed' });
+  }
+
+  IG_L1.set(username, { data, expires: Date.now() + IG_L1_TTL });
+  IG_L1_NEG.delete(username);
+  res.json({ seeded: true, username, data });
+});
+
+// Admin-only: list all currently cached Instagram usernames so the admin
+// panel can show what's primed and what isn't.
+app.get('/api/admin/instagram/cached', authenticateAdmin, async (req, res) => {
+  try {
+    const docs = await InstagramProfile.find({}, { username: 1, fetchedAt: 1, 'data.profilePic': 1, 'data.fullName': 1, 'data.posts': 1 }).sort({ fetchedAt: -1 });
+    res.json(docs.map((d) => ({
+      username: d.username,
+      fetchedAt: d.fetchedAt,
+      profilePic: d.data?.profilePic || null,
+      fullName: d.data?.fullName || null,
+      postCount: (d.data?.posts || []).length,
+    })));
+  } catch (err) {
+    res.status(500).json({ error: 'db read failed' });
+  }
 });
 
 app.get('/health', async (req, res) => {

@@ -182,6 +182,39 @@
         <h3 class="text-lg font-semibold text-violet-400 mb-3">All Companies</h3>
         <div id="companiesList" class="space-y-3"><p class="text-slate-400">Loading companies...</p></div>
       </div>
+
+      <!-- Instagram Cache Seeder -->
+      <div class="panel mb-8">
+        <h2 class="panel-title">Instagram Cache Seeder</h2>
+        <p class="mb-4 text-sm text-slate-400">
+          Meta rate-limits Instagram's web API from datacenter IPs, so the backend can't fetch profiles on its own.
+          Seed the cache from your own browser (residential IP, same-origin on instagram.com) and it'll be served
+          to voters for up to 7 days.
+        </p>
+
+        <div class="mb-6 rounded-xl bg-black/40 border border-white/10 p-4">
+          <h3 class="mb-2 text-sm font-semibold text-violet-400">Step 1 — Run this in Instagram's devtools console</h3>
+          <p class="mb-2 text-xs text-slate-400">
+            Open <span class="font-mono text-slate-200">https://www.instagram.com/&lt;username&gt;/</span> in a new tab,
+            press F12 to open devtools, go to the Console, paste this, hit Enter:
+          </p>
+          <pre id="igSeedSnippet" class="overflow-auto rounded bg-slate-950 p-3 text-xs text-emerald-300 whitespace-pre-wrap break-all"></pre>
+          <button type="button" class="btn-secondary btn-sm mt-2" onclick="copyIgSeedSnippet()">📋 Copy snippet</button>
+        </div>
+
+        <div class="mb-6">
+          <h3 class="mb-2 text-sm font-semibold text-violet-400">Step 2 — Paste the copied JSON here</h3>
+          <form id="seedIgForm" class="space-y-3">
+            <textarea id="seedIgInput" class="field font-mono text-xs" rows="6" placeholder='{"username":"...", "raw": {...}}' required></textarea>
+            <button type="submit" id="seedIgBtn" class="btn-primary">Seed Cache</button>
+          </form>
+        </div>
+
+        <div>
+          <h3 class="mb-3 text-sm font-semibold text-violet-400">Currently cached</h3>
+          <div id="igCachedList" class="space-y-2"><p class="text-sm text-slate-500">Loading...</p></div>
+        </div>
+      </div>
     </div>
 
     <script>
@@ -887,6 +920,90 @@
         } catch (err) { showMessage("Failed to reset session", "error"); }
       }
 
+      // -------- Instagram Cache Seeder --------
+
+      const IG_SEED_SNIPPET = `(async () => {
+  const u = location.pathname.split('/').filter(Boolean)[0];
+  if (!u) return alert('Not on an Instagram profile page');
+  const r = await fetch('/api/v1/users/web_profile_info/?username=' + u, { headers: { 'X-IG-App-ID': '936619743392459' } });
+  const d = await r.json();
+  const text = JSON.stringify({ username: u, raw: d });
+  await navigator.clipboard.writeText(text);
+  alert('✓ Copied ' + u + ' — paste into admin panel');
+})();`;
+
+      function renderSeedSnippet() {
+        const el = $("igSeedSnippet");
+        if (el) el.textContent = IG_SEED_SNIPPET;
+      }
+
+      function copyIgSeedSnippet() {
+        navigator.clipboard.writeText(IG_SEED_SNIPPET).then(
+          () => showMessage("Snippet copied — paste into Instagram devtools console", "success"),
+          () => showMessage("Copy failed — select the snippet manually", "error")
+        );
+      }
+
+      async function loadIgCached() {
+        const list = $("igCachedList");
+        if (!list) return;
+        try {
+          const res = await apiFetch("/admin/instagram/cached");
+          if (!res.ok) throw new Error("load failed");
+          const entries = await res.json();
+          if (!entries.length) {
+            list.innerHTML = `<p class="text-sm text-slate-500">No cached profiles yet. Seed one above.</p>`;
+            return;
+          }
+          list.innerHTML = entries.map((e) => {
+            const age = Math.round((Date.now() - new Date(e.fetchedAt).getTime()) / 60000);
+            const ageLabel = age < 60 ? `${age}m ago` : age < 1440 ? `${Math.round(age / 60)}h ago` : `${Math.round(age / 1440)}d ago`;
+            const avatar = e.profilePic
+              ? `<img src="${escapeHtml(e.profilePic)}" alt="" class="h-10 w-10 rounded-full object-cover" onerror="this.style.display='none'" />`
+              : `<div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-lg">📸</div>`;
+            return `
+              <div class="flex items-center gap-3 rounded-xl bg-white/[0.03] border border-white/5 p-3">
+                ${avatar}
+                <div class="flex-1 min-w-0">
+                  <div class="truncate text-sm font-semibold">@${escapeHtml(e.username)}</div>
+                  <div class="text-xs text-slate-500">${escapeHtml(e.fullName || "—")} · ${e.postCount} posts · ${ageLabel}</div>
+                </div>
+              </div>`;
+          }).join("");
+        } catch (err) {
+          list.innerHTML = `<p class="text-sm text-rose-400">Failed to load cache list.</p>`;
+        }
+      }
+
+      $("seedIgForm")?.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const raw = $("seedIgInput").value.trim();
+        if (!raw) return;
+        let payload;
+        try { payload = JSON.parse(raw); }
+        catch (err) { return showMessage("Invalid JSON — paste the full output of the snippet", "error"); }
+        if (!payload.username || !payload.raw) {
+          return showMessage('Expected shape: { "username": "...", "raw": {...} }', "error");
+        }
+        const btn = $("seedIgBtn");
+        btn.disabled = true; btn.textContent = "Seeding…";
+        try {
+          const res = await apiFetch("/admin/instagram/seed", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+          const data = await res.json();
+          if (res.ok) {
+            showMessage(`Seeded @${data.username} (${data.data?.posts?.length || 0} posts)`, "success");
+            $("seedIgInput").value = "";
+            loadIgCached();
+          } else {
+            showMessage(data.error || "Seed failed", "error");
+          }
+        } catch (err) { showMessage("Seed failed", "error"); }
+        finally { btn.disabled = false; btn.textContent = "Seed Cache"; }
+      });
+
       // -------- Bootstrap --------
 
       const token = getToken();
@@ -901,6 +1018,8 @@
           loadCurrentSession();
           loadCompanies();
           addSection();
+          renderSeedSnippet();
+          loadIgCached();
           setInterval(() => { loadStats(); loadCurrentSession(); loadCompanies(); }, 10000);
         });
       }

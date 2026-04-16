@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="mn">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Event Voting · Cast Your Vote</title>
+    <title>Санал хураалт · Саналаа өгөх</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = { theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } } };
@@ -19,21 +19,21 @@
     <main class="mx-auto max-w-5xl px-4 py-10 sm:py-16">
       <header class="mb-12 text-center">
         <h1 class="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl">
-          🎉 Event Voting
+          🎉 Санал хураалт
         </h1>
-        <p class="mt-3 text-lg text-slate-400">Help us plan the perfect celebration</p>
+        <p class="mt-3 text-lg text-slate-400">Төгс арга хэмжээг төлөвлөхөд туслаарай</p>
       </header>
 
       <div id="loading" class="py-20 text-center">
         <div class="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-white/10 border-l-violet-500"></div>
-        <p class="mt-5 text-lg text-slate-400">Loading event details…</p>
+        <p class="mt-5 text-lg text-slate-400">Мэдээлэл ачааллаж байна…</p>
       </div>
 
       <div id="content" class="hidden">
         <div id="noVoting" class="hidden py-20 text-center">
-          <h2 class="mb-4 text-3xl font-bold text-violet-400">No Active Voting Session</h2>
-          <p class="mb-2 text-lg text-slate-400">There is currently no active voting session for your company.</p>
-          <p class="text-lg text-slate-400">Please check back later or contact your administrator.</p>
+          <h2 class="mb-4 text-3xl font-bold text-violet-400">Идэвхтэй санал хураалт байхгүй</h2>
+          <p class="mb-2 text-lg text-slate-400">Танай компанид одоогоор идэвхтэй санал хураалт алга байна.</p>
+          <p class="text-lg text-slate-400">Дараа дахин шалгана уу эсвэл админтайгаа холбогдоно уу.</p>
         </div>
 
         <div id="votingActive" class="hidden">
@@ -41,7 +41,7 @@
             <h2 id="eventTitle" class="text-2xl font-bold text-violet-400"></h2>
             <div class="mt-3 flex flex-wrap items-center gap-5 text-sm text-slate-400">
               <div class="flex items-center gap-1.5">🏢 <span id="companyName" class="font-medium text-slate-300"></span></div>
-              <div class="rounded-full bg-white/10 px-3 py-1">📊 <span id="totalVotes">0</span> votes cast</div>
+              <div class="rounded-full bg-white/10 px-3 py-1">📊 <span id="totalVotes">0</span> санал өгсөн</div>
             </div>
           </section>
 
@@ -56,18 +56,18 @@
               id="submitBtn"
               class="mt-10 w-full rounded-2xl bg-gradient-to-r from-violet-500 to-fuchsia-500 py-5 text-lg font-bold shadow-lg shadow-violet-500/20 transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/40 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
             >
-              🎊 Submit Your Vote
+              🎊 Саналаа өгөх
             </button>
           </form>
         </div>
 
         <div id="successSection" class="hidden py-20 text-center">
           <div class="mb-6 text-8xl">✅</div>
-          <h2 class="mb-4 text-4xl font-bold text-violet-400">Thank You!</h2>
+          <h2 class="mb-4 text-4xl font-bold text-violet-400">Баярлалаа!</h2>
           <p class="mx-auto mb-6 max-w-xl text-lg text-slate-300">
-            Your vote has been successfully submitted. We're excited to plan an amazing celebration!
+            Таны санал амжилттай бүртгэгдлээ!
           </p>
-          <p class="text-slate-500">You can vote again in <span id="cooldownTime">3 hours</span></p>
+          <p class="text-slate-500">Та дахин санал өгөх боломжтой: <span id="cooldownTime">3 hours</span></p>
         </div>
       </div>
     </main>
@@ -127,10 +127,10 @@
           const hoursLeft = Math.floor(minutesLeft / 60);
           const minsLeft = minutesLeft % 60;
           const timeStr = hoursLeft > 0
-            ? `${hoursLeft} hour${hoursLeft > 1 ? "s" : ""} ${minsLeft} minute${minsLeft !== 1 ? "s" : ""}`
-            : `${minsLeft} minute${minsLeft !== 1 ? "s" : ""}`;
+            ? `${hoursLeft} цаг ${minsLeft} минут`
+            : `${minsLeft} минут`;
           const msg = $("cooldownMessage");
-          msg.textContent = `⏰ You can vote again in ${timeStr}`;
+          msg.textContent = `⏰ Та ${timeStr} дараа дахин санал өгөх боломжтой`;
           msg.classList.remove("hidden");
           $("votingForm").classList.add("hidden");
           return false;
@@ -145,9 +145,9 @@
         if (!currentCompanyId) {
           hide("loading"); show("content"); show("noVoting");
           $("noVoting").innerHTML = `
-            <h2 class="mb-4 text-3xl font-bold text-violet-400">Invalid URL</h2>
-            <p class="mb-2 text-lg text-slate-400">Company ID is missing from the URL.</p>
-            <p class="text-lg text-slate-400">Please use the correct link provided by your administrator.</p>`;
+            <h2 class="mb-4 text-3xl font-bold text-violet-400">Буруу холбоос</h2>
+            <p class="mb-2 text-lg text-slate-400">Холбоос дотор компанийн ID байхгүй байна.</p>
+            <p class="text-lg text-slate-400">Админаас өгсөн зөв холбоосыг ашиглана уу.</p>`;
           return;
         }
         try {
@@ -166,8 +166,8 @@
           console.error("Error loading voting:", err);
           hide("loading"); show("content"); show("noVoting");
           $("noVoting").innerHTML = `
-            <h2 class="mb-4 text-3xl font-bold text-violet-400">Error Loading Event</h2>
-            <p class="text-lg text-slate-400">Failed to load event details. Please try again later.</p>`;
+            <h2 class="mb-4 text-3xl font-bold text-violet-400">Алдаа гарлаа</h2>
+            <p class="text-lg text-slate-400">Мэдээлэл ачаалахад алдаа гарлаа. Дараа дахин оролдоно уу.</p>`;
         }
       }
 
@@ -290,7 +290,7 @@
               <div class="min-w-0 text-center">
                 <div class="break-words font-bold">@${escapeHtml(username)}</div>
                 <div data-ig-fullname class="hidden break-words text-xs opacity-90"></div>
-                <div class="mt-0.5 text-[11px] opacity-70">on Instagram</div>
+                <div class="mt-0.5 text-[11px] opacity-70">Instagram</div>
               </div>
               <div data-ig-posts class="grid w-full grid-cols-3 gap-1">
                 <div class="aspect-square animate-pulse rounded-lg bg-black/30"></div>
@@ -300,7 +300,7 @@
             </div>`;
           footerHtml = `
             <a href="${escapeHtml(instaInfo.profileUrl)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" class="block border-t border-white/10 bg-white/5 py-2 text-center text-xs text-slate-300 transition hover:bg-white/10 hover:text-white">
-              View on Instagram ↗
+              Instagram дээр үзэх ↗
             </a>`;
         } else {
           mediaHtml = `
@@ -345,9 +345,9 @@
 
           const subtitle = document.createElement("p");
           subtitle.className = "mt-1 mb-6 text-sm text-slate-400";
-          if (section.type === "single-select") subtitle.textContent = `Choose one option${section.required ? " (required)" : " (optional)"}`;
-          else if (section.type === "multi-select") subtitle.textContent = `Choose ${section.minSelections}–${section.maxSelections} option(s)${section.required ? " (required)" : " (optional)"}`;
-          else if (section.type === "text-input") subtitle.textContent = `Enter your response${section.required ? " (required)" : " (optional)"}`;
+          if (section.type === "single-select") subtitle.textContent = `Нэг сонголт хийнэ үү${section.required ? " (заавал)" : " (сонголттой)"}`;
+          else if (section.type === "multi-select") subtitle.textContent = `${section.minSelections}–${section.maxSelections} сонголт хийнэ үү${section.required ? " (заавал)" : " (сонголттой)"}`;
+          else if (section.type === "text-input") subtitle.textContent = `Хариултаа бичнэ үү${section.required ? " (заавал)" : " (сонголттой)"}`;
           wrapper.appendChild(subtitle);
 
           if (section.type === "single-select" || section.type === "multi-select") {
@@ -361,7 +361,7 @@
             const textarea = document.createElement("textarea");
             textarea.className = "min-h-[120px] w-full resize-y rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-slate-100 placeholder-slate-500 transition focus:border-violet-500 focus:bg-white/10 focus:outline-none focus:ring-2 focus:ring-violet-500/30";
             textarea.id = `section-${section.id}`;
-            textarea.placeholder = "Share your thoughts here…";
+            textarea.placeholder = "Санал бодлоо энд бичнэ үү…";
             textarea.addEventListener("input", (e) => { sectionValues[section.id] = e.target.value; });
             wrapper.appendChild(textarea);
             sectionValues[section.id] = "";
@@ -383,7 +383,7 @@
             sectionValues[section.id] = sectionValues[section.id].filter((v) => v !== optionName);
           } else {
             if (sectionValues[section.id].length >= section.maxSelections) {
-              showError(`You can select maximum ${section.maxSelections} option(s) for ${section.label}`);
+              showError(`${section.label} хэсэгт хамгийн ихдээ ${section.maxSelections} сонголт хийх боломжтой`);
               return;
             }
             card.setAttribute("data-selected", "true");
@@ -395,7 +395,7 @@
       async function submitVote(event) {
         event.preventDefault();
         if (!checkVotingCooldown()) {
-          showError("You are still in cooldown period. Please wait before voting again.");
+          showError("Та хүлээлтийн хугацаандаа байна. Түр хүлээнэ үү.");
           return;
         }
 
@@ -403,24 +403,24 @@
           const value = sectionValues[section.id];
           if (!section.required) continue;
           if (section.type === "text-input" && (!value || !value.trim())) {
-            return showError(`Please provide a response for ${section.label}`);
+            return showError(`${section.label} хэсэгт хариултаа бичнэ үү`);
           }
           if (section.type === "single-select" && !value) {
-            return showError(`Please select an option for ${section.label}`);
+            return showError(`${section.label} хэсэгт сонголтоо хийнэ үү`);
           }
           if (section.type === "multi-select") {
             if (!value || value.length < section.minSelections) {
-              return showError(`Please select at least ${section.minSelections} option(s) for ${section.label}`);
+              return showError(`${section.label} хэсэгт хамгийн багадаа ${section.minSelections} сонголт хийнэ үү`);
             }
             if (value.length > section.maxSelections) {
-              return showError(`Please select at most ${section.maxSelections} option(s) for ${section.label}`);
+              return showError(`${section.label} хэсэгт хамгийн ихдээ ${section.maxSelections} сонголт хийнэ үү`);
             }
           }
         }
 
         const btn = $("submitBtn");
         btn.disabled = true;
-        btn.textContent = "Submitting…";
+        btn.textContent = "Илгээж байна…";
 
         try {
           const res = await fetch(`${API_URL}/vote`, {
@@ -440,15 +440,15 @@
             hide("votingActive"); show("successSection");
             window.scrollTo({ top: 0, behavior: "smooth" });
           } else {
-            showError(data.message || "Failed to submit vote");
+            showError(data.message || "Санал илгээхэд алдаа гарлаа");
             btn.disabled = false;
-            btn.textContent = "🎊 Submit Your Vote";
+            btn.textContent = "🎊 Саналаа өгөх";
           }
         } catch (err) {
           console.error("Error submitting vote:", err);
-          showError("Failed to submit vote. Please try again.");
+          showError("Санал илгээхэд алдаа гарлаа. Дахин оролдоно уу.");
           btn.disabled = false;
-          btn.textContent = "🎊 Submit Your Vote";
+          btn.textContent = "🎊 Саналаа өгөх";
         }
       }
 

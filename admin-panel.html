@@ -43,18 +43,71 @@
     </div>
 
     <div class="max-w-7xl mx-auto px-4 py-10">
-      <header class="flex flex-wrap justify-between items-center gap-4 mb-10">
+      <!-- ═══════════ HEADER ═══════════ -->
+      <header class="flex flex-wrap justify-between items-center gap-4 mb-8">
         <div>
           <h1 class="text-3xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">🎛️ АДМИН ХЯНАЛТ</h1>
           <p class="text-slate-400 mt-1">Санал хураалтын систем</p>
         </div>
-        <button onclick="logout()" class="btn-danger">Гарах</button>
+        <button onclick="logout()" class="btn-danger btn-sm">Гарах</button>
       </header>
 
       <div id="message" class="hidden mb-6 p-4 rounded-xl"></div>
 
-      <!-- Statistics -->
-      <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+      <!-- ═══════════ HOW-TO GUIDE ═══════════ -->
+      <details class="panel mb-8 group" open>
+        <summary class="flex cursor-pointer items-center justify-between">
+          <h2 class="panel-title mb-0">📖 Ашиглах заавар</h2>
+          <span class="text-slate-400 text-xl transition group-open:rotate-180">▾</span>
+        </summary>
+        <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div class="rounded-xl bg-white/[0.03] border border-white/5 p-4">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/20 text-sm font-bold text-violet-300">1</span>
+              <h3 class="font-semibold text-slate-200">Ангилал нэмэх</h3>
+            </div>
+            <p class="text-sm text-slate-400">Уран бүтээлчдийн төрлийг үүсгэнэ үү. Жнь: Дуучин, Хөтлөгч, Комедиан, Хамтлаг.</p>
+          </div>
+          <div class="rounded-xl bg-white/[0.03] border border-white/5 p-4">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/20 text-sm font-bold text-violet-300">2</span>
+              <h3 class="font-semibold text-slate-200">Уран бүтээлчид нэмэх</h3>
+            </div>
+            <p class="text-sm text-slate-400">Нэр, зураг эсвэл Instagram URL, ангилал сонгон уран бүтээлчийг бүртгэнэ.</p>
+          </div>
+          <div class="rounded-xl bg-white/[0.03] border border-white/5 p-4">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/20 text-sm font-bold text-violet-300">3</span>
+              <h3 class="font-semibold text-slate-200">Компани нэмэх</h3>
+            </div>
+            <p class="text-sm text-slate-400">Санал өгөх компаниудын нэрийг оруулна. Компани бүрд тусдаа санал хураалтын холбоос үүснэ.</p>
+          </div>
+          <div class="rounded-xl bg-white/[0.03] border border-white/5 p-4">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/20 text-sm font-bold text-violet-300">4</span>
+              <h3 class="font-semibold text-slate-200">Санал хураалт үүсгэх</h3>
+            </div>
+            <p class="text-sm text-slate-400">Хэсэг бүрт ангилал сонгон санал хураалтыг үүсгэнэ. Өмнөх хураалт автоматаар идэвхгүй болно.</p>
+          </div>
+          <div class="rounded-xl bg-white/[0.03] border border-white/5 p-4">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/20 text-sm font-bold text-violet-300">5</span>
+              <h3 class="font-semibold text-slate-200">Холбоос түгээх</h3>
+            </div>
+            <p class="text-sm text-slate-400">Компани бүрийн "Санал хураалтын URL хуулах" товч дарж, холбоосыг тухайн компанид илгээнэ.</p>
+          </div>
+          <div class="rounded-xl bg-white/[0.03] border border-white/5 p-4">
+            <div class="flex items-center gap-3 mb-2">
+              <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/20 text-sm font-bold text-amber-300">⚡</span>
+              <h3 class="font-semibold text-slate-200">Instagram кэш (нэмэлт)</h3>
+            </div>
+            <p class="text-sm text-slate-400">Зургийн URL-гүй, зөвхөн Instagram URL-тай уран бүтээлчдэд профайл зураг + сүүлийн постуудыг оруулж болно.</p>
+          </div>
+        </div>
+      </details>
+
+      <!-- ═══════════ DASHBOARD: STATS + CURRENT SESSION ═══════════ -->
+      <div id="statsGrid" class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
         <div class="rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500 p-6 text-center">
           <div class="text-5xl font-bold mb-2">-</div>
           <div class="text-lg opacity-90">Нийт компани</div>
@@ -69,16 +122,18 @@
         </div>
       </div>
 
-      <!-- Current Voting Session -->
       <div class="panel mb-8">
-        <h2 class="panel-title">Одоогийн санал хураалт</h2>
+        <h2 class="panel-title">📊 Одоогийн санал хураалт</h2>
         <div id="currentSessionContainer"><p class="text-slate-400">Ачааллаж байна...</p></div>
       </div>
 
-      <!-- Manage Categories -->
+      <!-- ═══════════ SETUP SECTIONS (workflow order) ═══════════ -->
+      <h2 class="text-xl font-bold text-slate-300 mb-4 flex items-center gap-2">
+        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/20 text-xs font-bold text-violet-300">①</span>
+        Ангилал удирдах
+      </h2>
       <div class="panel mb-8">
-        <h2 class="panel-title">Ангилал удирдах</h2>
-        <p class="text-slate-400 mb-6">Ангилал нь уран бүтээлчдийг бүлэглэнэ (жнь: Комедиан, Дуучин, Бүжигчин, Хамтлаг).</p>
+        <p class="text-sm text-slate-400 mb-5">Уран бүтээлчдийг бүлэглэх ангилал үүсгэнэ үү. Жнь: 🎤 Дуучин, 🎭 Комедиан, 🎸 Хамтлаг, 🎙️ Хөтлөгч.</p>
 
         <form id="createCategoryForm" class="flex flex-wrap gap-3 items-end mb-6">
           <div class="flex-1 min-w-[200px]">
@@ -89,47 +144,52 @@
             <label for="categoryIcon" class="field-label">Дүрс</label>
             <input type="text" id="categoryIcon" placeholder="🎤" maxlength="4" class="field text-center" />
           </div>
-          <button type="submit" id="createCategoryBtn" class="btn-primary">Ангилал нэмэх</button>
+          <button type="submit" id="createCategoryBtn" class="btn-primary btn-sm">Нэмэх</button>
         </form>
 
         <div id="categoriesList" class="flex flex-wrap gap-3"><p class="text-slate-400">Ангилал ачааллаж байна...</p></div>
       </div>
 
-      <!-- Manage Artists -->
+      <h2 class="text-xl font-bold text-slate-300 mb-4 flex items-center gap-2">
+        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/20 text-xs font-bold text-violet-300">②</span>
+        Уран бүтээлчид удирдах
+      </h2>
       <div class="panel mb-8">
-        <h2 class="panel-title">Уран бүтээлчид удирдах</h2>
-        <p class="text-slate-400 mb-6">
-          Уран бүтээлчдийн профайл үүсгэнэ үү. Зургийн URL эсвэл Instagram URL оруулна уу.
-          Эдгээр уран бүтээлчдийг санал хураалтад нэмж болно.
+        <p class="text-sm text-slate-400 mb-5">
+          Уран бүтээлч бүрд <strong class="text-slate-300">зургийн URL</strong> эсвэл <strong class="text-slate-300">Instagram URL</strong> өгнө үү.
+          Зургийн URL өгвөл санал хураалтад шууд тэр зураг харагдана.
+          Зөвхөн Instagram URL өгвөл — Instagram кэшээс профайл зураг + сүүлийн постууд автоматаар татагдана (доорх "Instagram кэш" хэсгийг үзнэ үү).
         </p>
 
-        <form id="createArtistForm" class="space-y-5 mb-8">
-          <div>
-            <label for="artistName" class="field-label">Уран бүтээлчийн нэр *</label>
-            <input type="text" id="artistName" placeholder="Уран бүтээлчийн нэр" required class="field" />
-          </div>
-          <div>
-            <label for="artistImage" class="field-label">Зургийн URL</label>
-            <input type="text" id="artistImage" placeholder="https://..." class="field" />
-            <div class="muted">Зургийн URL (Instagram URL байвал заавал биш)</div>
-          </div>
-          <div>
-            <label for="artistInstagram" class="field-label">Instagram URL</label>
-            <input type="text" id="artistInstagram" placeholder="https://www.instagram.com/username or post URL" class="field" />
-            <div class="muted">Профайл эсвэл пост URL (Зургийн URL байвал заавал биш)</div>
-          </div>
-          <div>
-            <label class="field-label">Ангилал</label>
-            <div id="artistCategoriesCheckboxes" class="flex flex-wrap gap-2 mb-1"><p class="text-slate-400">Ангилал ачааллаж байна...</p></div>
-            <div class="muted">Уран бүтээлчийн ангиллыг сонгоно уу.</div>
-          </div>
-          <div class="flex gap-3">
-            <button type="submit" id="createArtistBtn" class="btn-primary">Хадгалах</button>
-            <button type="button" id="cancelEditArtistBtn" class="btn-secondary hidden">Болих</button>
-          </div>
-        </form>
+        <details class="mb-6 rounded-xl bg-white/[0.03] border border-white/5 p-5">
+          <summary class="cursor-pointer font-semibold text-violet-400 text-sm">➕ Уран бүтээлч нэмэх / засах</summary>
+          <form id="createArtistForm" class="space-y-5 mt-5">
+            <div>
+              <label for="artistName" class="field-label">Нэр *</label>
+              <input type="text" id="artistName" placeholder="Уран бүтээлчийн нэр" required class="field" />
+            </div>
+            <div>
+              <label for="artistImage" class="field-label">Зургийн URL</label>
+              <input type="text" id="artistImage" placeholder="https://..." class="field" />
+              <div class="muted">Зураг оруулвал санал хураалтад шууд энэ зураг харагдана</div>
+            </div>
+            <div>
+              <label for="artistInstagram" class="field-label">Instagram URL</label>
+              <input type="text" id="artistInstagram" placeholder="https://www.instagram.com/username" class="field" />
+              <div class="muted">Зураг оруулаагүй бол Instagram профайлаас зураг татагдана</div>
+            </div>
+            <div>
+              <label class="field-label">Ангилал</label>
+              <div id="artistCategoriesCheckboxes" class="flex flex-wrap gap-2 mb-1"><p class="text-slate-400">Ангилал ачааллаж байна...</p></div>
+            </div>
+            <div class="flex gap-3">
+              <button type="submit" id="createArtistBtn" class="btn-primary btn-sm">Хадгалах</button>
+              <button type="button" id="cancelEditArtistBtn" class="btn-secondary btn-sm hidden">Болих</button>
+            </div>
+          </form>
+        </details>
 
-        <div class="flex flex-wrap gap-3 mb-6">
+        <div class="flex flex-wrap gap-3 mb-5">
           <input type="text" id="artistSearch" placeholder="Нэрээр хайх..." class="field flex-1 min-w-[200px]" />
           <select id="artistFilterCategory" class="field min-w-[180px]">
             <option value="">Бүх ангилал</option>
@@ -141,12 +201,33 @@
         </div>
       </div>
 
-      <!-- Create New Global Voting Session -->
+      <h2 class="text-xl font-bold text-slate-300 mb-4 flex items-center gap-2">
+        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/20 text-xs font-bold text-violet-300">③</span>
+        Компани удирдах
+      </h2>
       <div class="panel mb-8">
-        <h2 class="panel-title">Шинэ санал хураалт үүсгэх</h2>
-        <p class="text-slate-400 mb-6">
-          Бүх компанид зориулсан НЭГ санал хураалт үүсгэнэ. Өмнөх хураалтууд идэвхгүй болно.
-          Хэсэг бүр нэг ангилалтай холбоотой.
+        <p class="text-sm text-slate-400 mb-5">Санал өгөх компаниудыг нэмнэ үү. Компани бүрд тусдаа санал хураалтын линк үүсгэгдэнэ.</p>
+
+        <form id="createCompanyForm" class="flex gap-3 items-end flex-wrap mb-6">
+          <div class="flex-1 min-w-[200px]">
+            <label for="companyName" class="field-label">Компанийн нэр</label>
+            <input type="text" id="companyName" placeholder="Компанийн нэрийг оруулна уу" required class="field" />
+          </div>
+          <button type="submit" id="createCompanyBtn" class="btn-primary btn-sm">Нэмэх</button>
+        </form>
+
+        <div id="companiesList" class="space-y-3"><p class="text-slate-400">Компаниуд ачааллаж байна...</p></div>
+      </div>
+
+      <h2 class="text-xl font-bold text-slate-300 mb-4 flex items-center gap-2">
+        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/20 text-xs font-bold text-violet-300">④</span>
+        Санал хураалт үүсгэх
+      </h2>
+      <div class="panel mb-8">
+        <p class="text-sm text-slate-400 mb-5">
+          Бүх компанид зориулсан <strong class="text-slate-300">нэг</strong> санал хураалт үүсгэнэ.
+          Хэсэг бүрт ангилал сонгон, тухайн ангилалд бүртгэлтэй уран бүтээлчдийг автоматаар оруулна.
+          Шинэ хураалт үүсгэхэд өмнөх нь автоматаар идэвхгүй болно.
         </p>
         <form id="createVotingForm" class="space-y-6">
           <div>
@@ -164,54 +245,42 @@
         </form>
       </div>
 
-      <!-- Manage Companies -->
+      <!-- ═══════════ ADVANCED: INSTAGRAM CACHE ═══════════ -->
+      <h2 class="text-xl font-bold text-slate-300 mb-4 flex items-center gap-2">
+        <span class="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/20 text-xs font-bold text-amber-300">⚡</span>
+        Instagram кэш <span class="text-sm font-normal text-slate-500">(нэмэлт)</span>
+      </h2>
       <div class="panel mb-8">
-        <h2 class="panel-title">Компани удирдах</h2>
-
-        <div class="mb-8">
-          <h3 class="text-lg font-semibold text-violet-400 mb-3">Шинэ компани нэмэх</h3>
-          <form id="createCompanyForm" class="flex gap-3 items-end flex-wrap">
-            <div class="flex-1 min-w-[200px]">
-              <label for="companyName" class="field-label">Компанийн нэр</label>
-              <input type="text" id="companyName" placeholder="Компанийн нэрийг оруулна уу" required class="field" />
-            </div>
-            <button type="submit" id="createCompanyBtn" class="btn-primary">Компани нэмэх</button>
-          </form>
+        <div class="rounded-xl bg-amber-500/5 border border-amber-500/20 p-4 mb-6">
+          <p class="text-sm text-amber-200/80">
+            <strong>Хэзээ хэрэгтэй вэ?</strong> Уран бүтээлчид зургийн URL оруулаагүй, зөвхөн Instagram URL-тай бол
+            профайл зураг + сүүлийн 3 пост автоматаар харагдахын тулд Instagram-аас мэдээллийг татах шаардлагатай.
+            Серверээс Instagram руу шууд хандах боломжгүй (Meta rate limit хийдэг) тул
+            та өөрийн хөтөчөөс татаж, энд оруулна.
+          </p>
         </div>
-
-        <h3 class="text-lg font-semibold text-violet-400 mb-3">Бүх компани</h3>
-        <div id="companiesList" class="space-y-3"><p class="text-slate-400">Компаниуд ачааллаж байна...</p></div>
-      </div>
-
-      <!-- Instagram Cache Seeder -->
-      <div class="panel mb-8">
-        <h2 class="panel-title">Instagram кэш</h2>
-        <p class="mb-4 text-sm text-slate-400">
-          Meta rate-limits Instagram's web API from datacenter IPs, so the backend can't fetch profiles on its own.
-          Seed the cache from your own browser (residential IP, same-origin on instagram.com) and it'll be served
-          to voters for up to 7 days.
-        </p>
 
         <div class="mb-6 rounded-xl bg-black/40 border border-white/10 p-4">
-          <h3 class="mb-2 text-sm font-semibold text-violet-400">Step 1 — Run this in Instagram's devtools console</h3>
-          <p class="mb-2 text-xs text-slate-400">
-            Open <span class="font-mono text-slate-200">https://www.instagram.com/&lt;username&gt;/</span> in a new tab,
-            press F12 to open devtools, go to the Console, paste this, hit Enter:
+          <h3 class="mb-2 text-sm font-semibold text-violet-400">Алхам 1 — Instagram дээр скрипт ажиллуулах</h3>
+          <p class="mb-3 text-xs text-slate-400">
+            <span class="font-mono text-slate-200">https://www.instagram.com/&lt;username&gt;/</span> хуудсыг шинэ табаар нээн,
+            <kbd class="rounded bg-white/10 px-1.5 py-0.5 text-[11px] text-slate-200">F12</kbd> дарж Console руу очоод
+            доорх кодыг буулган <kbd class="rounded bg-white/10 px-1.5 py-0.5 text-[11px] text-slate-200">Enter</kbd> дарна:
           </p>
           <pre id="igSeedSnippet" class="overflow-auto rounded bg-slate-950 p-3 text-xs text-emerald-300 whitespace-pre-wrap break-all"></pre>
-          <button type="button" class="btn-secondary btn-sm mt-2" onclick="copyIgSeedSnippet()">📋 Copy snippet</button>
+          <button type="button" class="btn-secondary btn-sm mt-3" onclick="copyIgSeedSnippet()">📋 Код хуулах</button>
         </div>
 
-        <div class="mb-6">
-          <h3 class="mb-2 text-sm font-semibold text-violet-400">Step 2 — Paste the copied JSON here</h3>
+        <div class="mb-6 rounded-xl bg-black/40 border border-white/10 p-4">
+          <h3 class="mb-2 text-sm font-semibold text-violet-400">Алхам 2 — Хуулсан JSON-ыг энд буулгах</h3>
           <form id="seedIgForm" class="space-y-3">
-            <textarea id="seedIgInput" class="field font-mono text-xs" rows="6" placeholder='{"username":"...", "raw": {...}}' required></textarea>
-            <button type="submit" id="seedIgBtn" class="btn-primary">Seed Cache</button>
+            <textarea id="seedIgInput" class="field font-mono text-xs" rows="5" placeholder='{"username":"...", "raw": {...}}' required></textarea>
+            <button type="submit" id="seedIgBtn" class="btn-primary btn-sm">Кэш хадгалах</button>
           </form>
         </div>
 
         <div>
-          <h3 class="mb-3 text-sm font-semibold text-violet-400">Currently cached</h3>
+          <h3 class="mb-3 text-sm font-semibold text-violet-400">Хадгалагдсан профайлууд</h3>
           <div id="igCachedList" class="space-y-2"><p class="text-sm text-slate-500">Ачааллаж байна...</p></div>
         </div>
       </div>

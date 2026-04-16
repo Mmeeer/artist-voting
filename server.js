@@ -13,7 +13,7 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/nye-vo
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'nye2025';
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '5mb' }));
 
 // MongoDB Schema Definitions
 const companySchema = new mongoose.Schema({

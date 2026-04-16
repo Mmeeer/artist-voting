@@ -52,7 +52,8 @@
         <button onclick="logout()" class="btn-danger btn-sm">Гарах</button>
       </header>
 
-      <div id="message" class="hidden mb-6 p-4 rounded-xl"></div>
+      <!-- Toast container — fixed bottom-right, stacks upward -->
+      <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col-reverse items-end gap-3 pointer-events-none"></div>
 
       <!-- ═══════════ HOW-TO GUIDE ═══════════ -->
       <details class="panel mb-8 group" open>
@@ -299,13 +300,33 @@
       function logout() { localStorage.removeItem("adminToken"); window.location.href = "admin.html"; }
 
       function showMessage(text, type) {
-        const el = $("message");
-        el.textContent = text;
-        const base = "block mb-6 p-4 rounded-xl border text-center";
-        if (type === "success") el.className = `${base} bg-emerald-500/15 border-emerald-500/50 text-emerald-300`;
-        else el.className = `${base} bg-rose-500/15 border-rose-500/50 text-rose-300`;
-        setTimeout(() => el.classList.add("hidden"), 5000);
-        el.classList.remove("hidden");
+        const container = $("toastContainer");
+        const toast = document.createElement("div");
+
+        const icon = type === "success" ? "✓" : "✕";
+        const colors = type === "success"
+          ? "bg-emerald-500/90 text-white"
+          : "bg-rose-500/90 text-white";
+
+        toast.className = `pointer-events-auto flex items-center gap-3 rounded-xl px-5 py-3 shadow-2xl backdrop-blur-xl transition-all duration-300 translate-x-full opacity-0 ${colors}`;
+        toast.innerHTML = `
+          <span class="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-sm font-bold">${icon}</span>
+          <span class="text-sm font-medium">${escapeHtml(text)}</span>`;
+
+        container.appendChild(toast);
+
+        // Slide in
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            toast.classList.remove("translate-x-full", "opacity-0");
+          });
+        });
+
+        // Auto-dismiss after 3s
+        setTimeout(() => {
+          toast.classList.add("translate-x-full", "opacity-0");
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
       }
 
       function escapeHtml(str) {

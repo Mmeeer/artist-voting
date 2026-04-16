@@ -961,11 +961,21 @@ function igBrowserHeaders() {
   };
 }
 
+// Proxy Instagram CDN images through wsrv.nl so:
+// 1. Signed scontent URLs that expire in 24-48h get cached on wsrv.nl's CDN
+// 2. Browser never hits instagram CDN directly (no region/referrer issues)
+// 3. CORS * header from wsrv.nl means any frontend can load them
+function proxyImg(url, size) {
+  if (!url) return null;
+  const params = new URLSearchParams({ url, w: String(size), h: String(size), fit: 'cover', n: '-1' });
+  return `https://wsrv.nl/?${params.toString()}`;
+}
+
 function normalizeIgProfile(user) {
   const posts = (user.edge_owner_to_timeline_media?.edges || [])
     .slice(0, 3)
     .map((e) => ({
-      image: e.node.thumbnail_src || e.node.display_url,
+      image: proxyImg(e.node.thumbnail_src || e.node.display_url, 640),
       shortcode: e.node.shortcode,
       postUrl: `https://www.instagram.com/p/${e.node.shortcode}/`,
       isVideo: !!e.node.is_video,
@@ -974,7 +984,7 @@ function normalizeIgProfile(user) {
   return {
     username: user.username,
     fullName: user.full_name || null,
-    profilePic: user.profile_pic_url_hd || user.profile_pic_url || null,
+    profilePic: proxyImg(user.profile_pic_url_hd || user.profile_pic_url, 320),
     isPrivate: !!user.is_private,
     followerCount: user.edge_followed_by?.count ?? null,
     postCount: user.edge_owner_to_timeline_media?.count ?? null,

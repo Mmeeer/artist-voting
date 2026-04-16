@@ -972,8 +972,15 @@ function proxyImg(url, size) {
 }
 
 function normalizeIgProfile(user) {
-  const posts = (user.edge_owner_to_timeline_media?.edges || [])
-    .slice(0, 3)
+  const allEdges = user.edge_owner_to_timeline_media?.edges || [];
+
+  // Prefer image posts over reels/videos — reel thumbnails are video
+  // frame captures that image proxies sometimes fail on.
+  const imageEdges = allEdges.filter((e) => !e.node.is_video);
+  const videoEdges = allEdges.filter((e) => e.node.is_video);
+  const bestEdges = [...imageEdges, ...videoEdges].slice(0, 3);
+
+  const posts = bestEdges
     .map((e) => ({
       image: proxyImg(e.node.thumbnail_src || e.node.display_url, 640),
       shortcode: e.node.shortcode,
@@ -981,6 +988,7 @@ function normalizeIgProfile(user) {
       isVideo: !!e.node.is_video,
     }))
     .filter((p) => p.image);
+
   return {
     username: user.username,
     fullName: user.full_name || null,

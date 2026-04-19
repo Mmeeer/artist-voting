@@ -63,6 +63,8 @@ const sectionSchema = new mongoose.Schema({
 const votingSessionSchema = new mongoose.Schema({
   id: { type: String, required: true, unique: true, index: true },
   title: { type: String, required: true },
+  venue: { type: String, default: '' },
+  venueImageUrl: { type: String, default: '' },
   sections: [sectionSchema],
   isActive: { type: Boolean, default: true },
   createdAt: { type: Date, default: Date.now }
@@ -92,10 +94,7 @@ const InstagramProfile = mongoose.model('InstagramProfile', instagramProfileSche
 
 async function connectDB() {
   try {
-    await mongoose.connect(MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true
-    });
+    await mongoose.connect(MONGODB_URI);
     console.log('✅ Connected to MongoDB');
   } catch (error) {
     console.error('❌ MongoDB connection error:', error);
@@ -170,6 +169,8 @@ app.get('/api/voting/:companyId', async (req, res) => {
       active: true,
       id: currentVoting.id,
       title: currentVoting.title,
+      venue: currentVoting.venue || '',
+      venueImageUrl: currentVoting.venueImageUrl || '',
       sections: currentVoting.sections,
       totalVotes,
       companyVotes,
@@ -414,6 +415,8 @@ app.get('/api/results/:votingSessionId', async (req, res) => {
     res.json({
       active: votingSession.isActive,
       title: votingSession.title,
+      venue: votingSession.venue || '',
+      venueImageUrl: votingSession.venueImageUrl || '',
       results: formattedResults,
       totalVotes: allVotes.length
     });
@@ -444,6 +447,8 @@ app.get('/api/results/:votingSessionId/company/:companyId', async (req, res) => 
     res.json({
       active: votingSession.isActive,
       title: votingSession.title,
+      venue: votingSession.venue || '',
+      venueImageUrl: votingSession.venueImageUrl || '',
       company: company.name,
       results: formattedResults,
       totalVotes: companyVotes.length
@@ -743,7 +748,7 @@ app.delete('/api/admin/artists/:artistId', authenticateAdmin, async (req, res) =
 // Create global voting session
 app.post('/api/admin/create-voting', authenticateAdmin, async (req, res) => {
   try {
-    const { title, sections } = req.body;
+    const { title, venue, venueImageUrl, sections } = req.body;
 
     if (!title || !sections) {
       return res.status(400).json({ message: 'Invalid voting session data' });
@@ -801,6 +806,8 @@ app.post('/api/admin/create-voting', authenticateAdmin, async (req, res) => {
     const newVoting = new VotingSession({
       id: crypto.randomBytes(16).toString('hex'),
       title,
+      venue: (venue || '').trim(),
+      venueImageUrl: (venueImageUrl || '').trim(),
       sections: sections,
       isActive: true
     });

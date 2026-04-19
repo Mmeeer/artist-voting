@@ -38,6 +38,12 @@
         <div id="resultsActive" class="hidden">
           <section class="mb-8 rounded-2xl border-l-4 border-violet-500 bg-white/5 p-6 backdrop-blur-sm">
             <h2 id="eventTitle" class="text-2xl font-bold text-violet-400"></h2>
+            <div id="venueInfo" class="hidden mt-4">
+              <div id="venueImageWrap" class="hidden mb-3 overflow-hidden rounded-xl">
+                <img id="venueImage" src="" alt="Venue" class="w-full max-h-64 object-cover" onerror="this.parentElement.classList.add('hidden')" />
+              </div>
+              <div id="venueText" class="hidden text-base text-slate-300 font-medium">📍 <span id="venueTextContent"></span></div>
+            </div>
             <div class="mt-3 flex flex-wrap items-center gap-4 text-sm text-slate-400">
               <div id="companyNameContainer" class="hidden">🏢 <span id="companyName" class="font-medium text-slate-300"></span></div>
               <div id="viewModeContainer" class="hidden">
@@ -188,6 +194,17 @@
 
           $("eventTitle").textContent = data.title;
           $("totalVotes").textContent = data.totalVotes;
+          if (data.venueImageUrl || data.venue) {
+            $("venueInfo").classList.remove("hidden");
+            if (data.venueImageUrl) {
+              $("venueImage").src = data.venueImageUrl;
+              $("venueImageWrap").classList.remove("hidden");
+            }
+            if (data.venue) {
+              $("venueTextContent").textContent = data.venue;
+              $("venueText").classList.remove("hidden");
+            }
+          }
 
           const badge = $("viewModeBadge");
           if (data.company) {

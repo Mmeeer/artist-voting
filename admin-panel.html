@@ -237,6 +237,18 @@
           </div>
 
           <div>
+            <label for="sessionVenue" class="field-label">Заал / Venue нэр</label>
+            <input type="text" id="sessionVenue" placeholder="жнь: Shangri-La Hotel, Blue Sky Tower" class="field" />
+            <div class="muted">Санал хураалтын хуудсанд venue нэр харагдана</div>
+          </div>
+
+          <div>
+            <label for="sessionVenueImage" class="field-label">Venue зургийн URL</label>
+            <input type="text" id="sessionVenueImage" placeholder="https://..." class="field" />
+            <div class="muted">Venue зураг оруулвал гарчгийн доор харагдана</div>
+          </div>
+
+          <div>
             <label class="field-label">Хэсгүүд</label>
             <div id="sectionsContainer" class="space-y-4 mb-4"></div>
             <button type="button" class="btn-secondary btn-sm" onclick="addSection()">+ Хэсэг нэмэх</button>
@@ -841,6 +853,8 @@
               <div class="flex flex-wrap justify-between items-start gap-4 mb-6">
                 <div>
                   <h3 class="text-xl font-bold text-violet-400 mb-2">${escapeHtml(session.title)}</h3>
+                  ${session.venue ? `<p class="text-slate-400 text-sm">📍 Venue: ${escapeHtml(session.venue)}</p>` : ''}
+                  ${session.venueImageUrl ? `<div class="mt-2 mb-2 overflow-hidden rounded-lg max-w-xs"><img src="${escapeHtml(session.venueImageUrl)}" alt="Venue" class="w-full h-32 object-cover" onerror="this.parentElement.style.display='none'" /></div>` : ''}
                   <p class="text-slate-400 text-sm">🎫 Session ID: ${escapeHtml(session.id)}</p>
                   <p class="text-slate-400 text-sm">📊 Total Votes: ${data.totalVotes}</p>
                   <p class="text-slate-400 text-sm">📋 Sections: ${session.sections ? session.sections.length : 0}</p>
@@ -931,6 +945,8 @@
       $("createVotingForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const title = $("sessionTitle").value.trim();
+        const venue = $("sessionVenue").value.trim();
+        const venueImageUrl = $("sessionVenueImage").value.trim();
         const sections = [];
         const sectionDivs = document.querySelectorAll("[data-section-id]");
 
@@ -963,7 +979,7 @@
         const btn = $("createVotingBtn");
         btn.disabled = true; btn.textContent = "Creating...";
         try {
-          const res = await apiFetch("/admin/create-voting", { method: "POST", body: JSON.stringify({ title, sections }) });
+          const res = await apiFetch("/admin/create-voting", { method: "POST", body: JSON.stringify({ title, venue, venueImageUrl, sections }) });
           const data = await res.json();
           if (res.ok) {
             showMessage("Санал хураалт амжилттай үүсгэгдлээ!", "success");

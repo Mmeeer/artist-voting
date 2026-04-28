@@ -1048,7 +1048,9 @@
       console.error('%c❌ Navigate to an artist profile page first (instagram.com/<username>/), then re-run.', 'color:#f55;font-size:14px;font-weight:bold');
       return;
     }
-    if (!document.cookie.includes('sessionid=')) {
+    // sessionid is HttpOnly so document.cookie never sees it; ds_user_id is
+    // the readable companion cookie that's set whenever the user is logged in.
+    if (!/(?:^|;\\s*)ds_user_id=/.test(document.cookie)) {
       console.error('%c❌ Not logged into Instagram in this browser. Log in, reload the profile page, then re-run.', 'color:#f55;font-size:14px;font-weight:bold');
       return;
     }

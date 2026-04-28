@@ -37,17 +37,17 @@
         </div>
 
         <div id="votingActive" class="hidden">
-          <section class="mb-8 rounded-2xl border-l-4 border-violet-500 bg-white/5 p-6 backdrop-blur-sm">
-            <h2 id="eventTitle" class="text-2xl font-bold text-violet-400"></h2>
-            <div id="venueInfo" class="hidden mt-4">
-              <div id="venueImageWrap" class="hidden mb-3 overflow-hidden rounded-xl">
-                <img id="venueImage" src="" alt="Venue" class="w-full max-h-64 object-cover" onerror="this.parentElement.classList.add('hidden')" />
-              </div>
-              <div id="venueText" class="hidden text-base text-slate-300 font-medium">📍 <span id="venueTextContent"></span></div>
+          <section class="mb-8 overflow-hidden rounded-2xl border-l-4 border-violet-500 bg-white/5 backdrop-blur-sm">
+            <div id="venueImageWrap" class="hidden">
+              <img id="venueImage" src="" alt="Venue" class="w-full max-h-72 object-cover" onerror="this.parentElement.classList.add('hidden')" />
             </div>
-            <div class="mt-3 flex flex-wrap items-center gap-5 text-sm text-slate-400">
-              <div class="flex items-center gap-1.5">🏢 <span id="companyName" class="font-medium text-slate-300"></span></div>
-              <div class="rounded-full bg-white/10 px-3 py-1">📊 <span id="totalVotes">0</span> санал өгсөн</div>
+            <div class="p-4 sm:p-6">
+              <h2 id="eventTitle" class="text-2xl font-bold text-violet-400"></h2>
+              <div id="venueText" class="hidden mt-2 text-base text-slate-300 font-medium">📍 <span id="venueTextContent"></span></div>
+              <div class="mt-3 flex flex-wrap items-center gap-5 text-sm text-slate-400">
+                <div class="flex items-center gap-1.5">🏢 <span id="companyName" class="font-medium text-slate-300"></span></div>
+                <div class="rounded-full bg-white/10 px-3 py-1">📊 <span id="totalVotes">0</span> санал өгсөн</div>
+              </div>
             </div>
           </section>
 
@@ -163,16 +163,19 @@
           if (!data.active) { show("noVoting"); return; }
           currentVotingSession = data;
           $("eventTitle").textContent = data.title;
-          if (data.venueImageUrl || data.venue) {
-            show("venueInfo");
-            if (data.venueImageUrl) {
-              $("venueImage").src = data.venueImageUrl;
-              $("venueImageWrap").classList.remove("hidden");
-            }
-            if (data.venue) {
-              $("venueTextContent").textContent = data.venue;
-              $("venueText").classList.remove("hidden");
-            }
+          if (data.venueImageUrl) {
+            // Voting page is HTTPS; many uploads are served from http://139.59.107.13.
+            // Route http URLs through wsrv.nl (used elsewhere for IG images) so the
+            // browser doesn't block them as mixed content.
+            const raw = data.venueImageUrl;
+            $("venueImage").src = raw.startsWith("http://")
+              ? `https://wsrv.nl/?url=${encodeURIComponent(raw)}&w=1200&output=jpg&n=-1`
+              : raw;
+            $("venueImageWrap").classList.remove("hidden");
+          }
+          if (data.venue) {
+            $("venueTextContent").textContent = data.venue;
+            $("venueText").classList.remove("hidden");
           }
           $("companyName").textContent = data.companyName;
           $("totalVotes").textContent = data.totalVotes;

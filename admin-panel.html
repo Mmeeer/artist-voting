@@ -282,6 +282,10 @@
           </p>
           <pre id="igSeedSnippet" class="overflow-auto rounded bg-slate-950 p-3 text-xs text-emerald-300 whitespace-pre-wrap break-all"></pre>
           <button type="button" class="btn-secondary btn-sm mt-3" onclick="copyIgSeedSnippet()">📋 Код хуулах</button>
+          <p class="mt-3 text-[11px] text-amber-300/80">
+            ⚠ Chrome шинэ хувилбарууд console-д код буулгахыг блоклодог. Хэрэв script ажиллахгүй бол эхлээд console дээр
+            <span class="rounded bg-white/10 px-1.5 py-0.5 font-mono text-amber-200">allow pasting</span> гэж бичээд Enter дараарай, дараа нь скриптээ буулгана.
+          </p>
         </div>
 
         <div class="mb-6 rounded-xl bg-black/40 border border-white/10 p-4">
@@ -1033,35 +1037,71 @@
       // DevTools-only global that always works; textarea+execCommand is
       // the fallback; a console dump is the last resort.
       const IG_SEED_SNIPPET = `(async () => {
-  const u = location.pathname.split('/').filter(Boolean)[0];
-  if (!u) { console.error('%c❌ Open an Instagram profile page first (e.g. instagram.com/<username>/)', 'color:#f55;font-size:14px;font-weight:bold'); return; }
-  if (!/(?:^|;\\s*)sessionid=/.test(document.cookie)) {
-    console.error('%c❌ Not logged into Instagram in this browser. Posts come back empty for anonymous viewers. Log in, reload, then re-run.', 'color:#f55;font-size:14px;font-weight:bold');
-    return;
+  console.log('%c→ IG seed running…', 'color:#88f');
+  try {
+    if (!location.hostname.endsWith('instagram.com')) {
+      console.error('%c❌ Run this on instagram.com (not ' + location.hostname + ')', 'color:#f55;font-size:14px;font-weight:bold');
+      return;
+    }
+    const u = location.pathname.split('/').filter(Boolean)[0];
+    if (!u || ['p','reel','reels','tv','explore','accounts','direct','stories'].includes(u)) {
+      console.error('%c❌ Navigate to an artist profile page first (instagram.com/<username>/), then re-run.', 'color:#f55;font-size:14px;font-weight:bold');
+      return;
+    }
+    if (!document.cookie.includes('sessionid=')) {
+      console.error('%c❌ Not logged into Instagram in this browser. Log in, reload the profile page, then re-run.', 'color:#f55;font-size:14px;font-weight:bold');
+      return;
+    }
+    let r;
+    try {
+      r = await fetch('/api/v1/users/web_profile_info/?username=' + encodeURIComponent(u), {
+        credentials: 'include',
+        headers: {
+          'X-IG-App-ID': '936619743392459',
+          'X-ASBD-ID': '198387',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+    } catch (e) {
+      console.error('%c❌ Network error: ' + e.message, 'color:#f55;font-size:14px;font-weight:bold');
+      return;
+    }
+    if (!r.ok) {
+      console.error('%c❌ Instagram returned HTTP ' + r.status + '. Reload the page (Ctrl+Shift+R) and try again.', 'color:#f55;font-size:14px;font-weight:bold');
+      return;
+    }
+    const d = await r.json();
+    const user = d && d.data && d.data.user;
+    if (!user) {
+      console.error('%c❌ No user object in response — Instagram may have rate-limited you.', 'color:#f55;font-size:14px;font-weight:bold');
+      console.log(d);
+      return;
+    }
+    const edges = (user.edge_owner_to_timeline_media && user.edge_owner_to_timeline_media.edges) || [];
+    const isPrivate = !!user.is_private;
+    if (!isPrivate && edges.length === 0) {
+      console.warn('%c⚠ 0 posts returned for @' + u + '. Instagram treated this as anonymous. Hard-reload (Ctrl+Shift+R) and re-run.', 'color:#fa0;font-size:13px;font-weight:bold');
+      if (!confirm('@' + u + ' returned 0 posts. Copy anyway?')) return;
+    }
+    const text = JSON.stringify({ username: u, raw: d });
+    let copied = false;
+    try { if (typeof copy === 'function') { copy(text); copied = true; } } catch (e) {}
+    if (!copied) {
+      try { await navigator.clipboard.writeText(text); copied = true; } catch (e) {}
+    }
+    if (!copied) {
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px';
+      document.body.appendChild(ta); ta.select();
+      try { copied = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+    console.log('%c✓ @' + u + ' (' + edges.length + ' posts' + (isPrivate ? ', private' : '') + ') ' + (copied ? 'copied to clipboard' : 'copy FAILED — select JSON below:'), 'color:#0f0;font-size:14px;font-weight:bold');
+    if (!copied) console.log(text);
+  } catch (err) {
+    console.error('%c❌ Snippet crashed: ' + (err && err.message ? err.message : err), 'color:#f55;font-size:14px;font-weight:bold');
+    console.error(err);
   }
-  const r = await fetch('/api/v1/users/web_profile_info/?username=' + u, { headers: { 'X-IG-App-ID': '936619743392459' } });
-  if (!r.ok) { console.error('%c❌ Fetch failed: ' + r.status, 'color:#f55;font-size:14px;font-weight:bold'); return; }
-  const d = await r.json();
-  const user = d?.data?.user;
-  const edges = user?.edge_owner_to_timeline_media?.edges || [];
-  const isPrivate = !!user?.is_private;
-  if (!user) { console.error('%c❌ No user object in response — Instagram may have rate-limited you.', 'color:#f55;font-size:14px;font-weight:bold'); return; }
-  if (!isPrivate && edges.length === 0) {
-    console.warn('%c⚠ 0 posts returned for @' + u + '. Instagram likely treated this request as anonymous. Try: hard-reload (Ctrl+Shift+R), confirm you see posts on the page, then re-run.', 'color:#fa0;font-size:13px;font-weight:bold');
-    if (!confirm('@' + u + ' returned 0 posts. Copy anyway?')) return;
-  }
-  const text = JSON.stringify({ username: u, raw: d });
-  let copied = false;
-  try { copy(text); copied = true; } catch (e) {}
-  if (!copied) {
-    const ta = document.createElement('textarea');
-    ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px';
-    document.body.appendChild(ta); ta.select();
-    try { copied = document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-  }
-  console.log('%c✓ @' + u + ' (' + edges.length + ' posts' + (isPrivate ? ', private' : '') + ') ' + (copied ? 'copied to clipboard' : 'copy FAILED — select JSON below:'), 'color:#0f0;font-size:14px;font-weight:bold');
-  if (!copied) console.log(text);
 })();`;
 
       function renderSeedSnippet() {

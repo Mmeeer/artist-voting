@@ -16,7 +16,7 @@
       <div class="absolute bottom-0 right-0 w-[500px] h-[500px] rounded-full bg-fuchsia-600/10 blur-[120px]"></div>
     </div>
 
-    <main class="mx-auto max-w-5xl px-4 py-10 sm:py-16">
+    <main class="mx-auto max-w-5xl px-2 py-6 sm:px-4 sm:py-16">
       <header class="mb-12 text-center">
         <h1 class="bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl">
           🎉 Санал хураалт
@@ -299,17 +299,17 @@
         } else if (instaInfo && instaInfo.type === "profile") {
           const username = instaInfo.username;
           mediaHtml = `
-            <div data-ig-username="${escapeHtml(username)}" class="${IG_GRADIENT} flex flex-col items-center gap-3 p-5 text-white">
-              <div class="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-[3px] border-white bg-white/30 text-3xl shadow-xl">
+            <div data-ig-username="${escapeHtml(username)}" class="${IG_GRADIENT} flex flex-col items-center gap-2 p-2 text-white sm:gap-3 sm:p-5">
+              <div class="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-white/30 text-xl shadow-xl sm:h-20 sm:w-20 sm:border-[3px] sm:text-3xl">
                 <span>📸</span>
                 <img data-ig-avatar alt="" loading="lazy" class="absolute inset-0 hidden h-full w-full object-cover" onerror="this.classList.add('hidden')" />
               </div>
               <div class="min-w-0 text-center">
-                <div class="break-words font-bold">@${escapeHtml(username)}</div>
-                <div data-ig-fullname class="hidden break-words text-xs opacity-90"></div>
-                <div class="mt-0.5 text-[11px] opacity-70">Instagram</div>
+                <div class="break-words text-xs font-bold sm:text-base">@${escapeHtml(username)}</div>
+                <div data-ig-fullname class="hidden break-words text-[10px] opacity-90 sm:text-xs"></div>
+                <div class="mt-0.5 text-[10px] opacity-70 sm:text-[11px]">Instagram</div>
               </div>
-              <div data-ig-posts class="grid w-full grid-cols-3 gap-1">
+              <div data-ig-posts class="grid w-full grid-cols-3 gap-0.5 sm:gap-1">
                 <div class="aspect-square animate-pulse rounded-lg bg-black/30"></div>
                 <div class="aspect-square animate-pulse rounded-lg bg-black/30"></div>
                 <div class="aspect-square animate-pulse rounded-lg bg-black/30"></div>
@@ -328,11 +328,11 @@
 
         card.innerHTML = `
           ${mediaHtml}
-          <div class="flex min-h-[52px] flex-1 items-center justify-center px-3 py-3 text-center text-sm font-semibold text-slate-100">
+          <div class="flex min-h-[36px] flex-1 items-center justify-center px-2 py-1.5 text-center text-xs font-semibold text-slate-100 sm:min-h-[52px] sm:px-3 sm:py-3 sm:text-sm">
             ${escapeHtml(option.name)}
           </div>
           ${footerHtml}
-          <div class="absolute right-2 top-2 z-10 hidden h-8 w-8 items-center justify-center rounded-full bg-violet-500 font-bold text-white shadow-lg group-data-[selected=true]:flex">
+          <div class="absolute right-1 top-1 z-10 hidden h-6 w-6 items-center justify-center rounded-full bg-violet-500 text-xs font-bold text-white shadow-lg sm:right-2 sm:top-2 sm:h-8 sm:w-8 sm:text-base group-data-[selected=true]:flex">
             ✓
           </div>`;
 
@@ -353,7 +353,7 @@
         container.innerHTML = "";
         sections.forEach((section, index) => {
           const wrapper = document.createElement("section");
-          wrapper.className = "rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm sm:p-8";
+          wrapper.className = "rounded-2xl border border-white/10 bg-white/5 p-2 backdrop-blur-sm sm:p-8";
 
           const title = document.createElement("h3");
           title.className = "text-xl font-bold text-violet-400 sm:text-2xl";
@@ -361,7 +361,7 @@
           wrapper.appendChild(title);
 
           const subtitle = document.createElement("p");
-          subtitle.className = "mt-1 mb-6 text-sm text-slate-400";
+          subtitle.className = "mt-1 mb-3 text-sm text-slate-400 sm:mb-6";
           if (section.type === "single-select") subtitle.textContent = `Нэг сонголт хийнэ үү${section.required ? " (заавал)" : " (сонголттой)"}`;
           else if (section.type === "multi-select") subtitle.textContent = `${section.minSelections}–${section.maxSelections} сонголт хийнэ үү${section.required ? " (заавал)" : " (сонголттой)"}`;
           else if (section.type === "text-input") subtitle.textContent = `Хариултаа бичнэ үү${section.required ? " (заавал)" : " (сонголттой)"}`;
@@ -369,7 +369,7 @@
 
           if (section.type === "single-select" || section.type === "multi-select") {
             const grid = document.createElement("div");
-            grid.className = "grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
+            grid.className = "grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4";
             grid.id = `section-${section.id}`;
             section.options.forEach((opt) => grid.appendChild(buildOptionCard(section, opt)));
             wrapper.appendChild(grid);

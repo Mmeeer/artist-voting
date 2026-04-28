@@ -1079,11 +1079,47 @@
       console.log(d);
       return;
     }
-    const edges = (user.edge_owner_to_timeline_media && user.edge_owner_to_timeline_media.edges) || [];
+    let edges = (user.edge_owner_to_timeline_media && user.edge_owner_to_timeline_media.edges) || [];
     const isPrivate = !!user.is_private;
+
+    // web_profile_info no longer reliably returns the timeline grid for
+    // non-followers (IG gates it behind an internal GraphQL call). Scrape
+    // the DOM the page already rendered and graft those posts onto the
+    // payload so the backend gets them in the expected shape.
     if (!isPrivate && edges.length === 0) {
-      console.warn('%c⚠ 0 posts returned for @' + u + '. Instagram treated this as anonymous. Hard-reload (Ctrl+Shift+R) and re-run.', 'color:#fa0;font-size:13px;font-weight:bold');
-      if (!confirm('@' + u + ' returned 0 posts. Copy anyway?')) return;
+      console.log('%c→ web_profile_info returned 0 posts; scraping page DOM…', 'color:#88f');
+      const scraped = [];
+      const seen = new Set();
+      const anchors = document.querySelectorAll('a[href^="/p/"], a[href^="/reel/"]');
+      for (const a of anchors) {
+        const m = (a.getAttribute('href') || '').match(/^\\/(p|reel)\\/([^/?]+)/);
+        if (!m) continue;
+        const shortcode = m[2];
+        if (seen.has(shortcode)) continue;
+        const img = a.querySelector('img');
+        const src = img && (img.currentSrc || img.src);
+        if (!src || src.startsWith('data:')) continue;
+        seen.add(shortcode);
+        scraped.push({
+          node: {
+            shortcode,
+            thumbnail_src: src,
+            display_url: src,
+            is_video: m[1] === 'reel',
+          },
+        });
+        if (scraped.length >= 12) break;
+      }
+      if (scraped.length > 0) {
+        user.edge_owner_to_timeline_media = user.edge_owner_to_timeline_media || {};
+        user.edge_owner_to_timeline_media.edges = scraped;
+        if (!user.edge_owner_to_timeline_media.count) user.edge_owner_to_timeline_media.count = scraped.length;
+        edges = scraped;
+        console.log('%c✓ Scraped ' + scraped.length + ' posts from DOM', 'color:#0f0');
+      } else {
+        console.warn('%c⚠ No post links found on the page either. Scroll the profile until the post grid is visible, then re-run.', 'color:#fa0;font-size:13px;font-weight:bold');
+        if (!confirm('@' + u + ' returned 0 posts and none were visible in the DOM. Copy anyway?')) return;
+      }
     }
     const text = JSON.stringify({ username: u, raw: d });
     let copied = false;

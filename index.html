@@ -303,14 +303,13 @@
           const username = instaInfo.username;
           mediaHtml = `
             <div data-ig-username="${escapeHtml(username)}" class="${IG_GRADIENT} flex flex-col items-center gap-2 p-2 text-white sm:gap-3 sm:p-5">
-              <div class="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-white/30 text-xl shadow-xl sm:h-20 sm:w-20 sm:border-[3px] sm:text-3xl">
+              <div class="relative flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-white/30 text-3xl shadow-xl sm:h-24 sm:w-24 sm:border-[3px] sm:text-4xl">
                 <span>📸</span>
                 <img data-ig-avatar alt="" loading="lazy" class="absolute inset-0 hidden h-full w-full object-cover" onerror="this.classList.add('hidden')" />
               </div>
               <div class="min-w-0 text-center">
                 <div class="break-words text-xs font-bold sm:text-base">@${escapeHtml(username)}</div>
                 <div data-ig-fullname class="hidden break-words text-[10px] opacity-90 sm:text-xs"></div>
-                <div class="mt-0.5 text-[10px] opacity-70 sm:text-[11px]">Instagram</div>
               </div>
               <div data-ig-posts class="grid w-full grid-cols-3 gap-0.5 sm:gap-1">
                 <div class="aspect-square animate-pulse rounded-lg bg-black/30"></div>

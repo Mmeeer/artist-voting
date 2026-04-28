@@ -1170,6 +1170,24 @@ app.get('/api/admin/instagram/cached', authenticateAdmin, async (req, res) => {
   }
 });
 
+// Admin-only: drop a cached Instagram profile so the next page view will
+// re-fetch from upstream (or, more practically, force a re-seed). Used to
+// purge bad seeds (e.g. captured while logged-out → 0 posts).
+app.delete('/api/admin/instagram/cached/:username', authenticateAdmin, async (req, res) => {
+  const username = String(req.params.username || '').trim().toLowerCase();
+  if (!username || !/^[a-zA-Z0-9_.]{1,30}$/.test(username)) {
+    return res.status(400).json({ error: 'invalid username' });
+  }
+  try {
+    const result = await InstagramProfile.deleteOne({ username });
+    IG_L1.delete(username);
+    IG_L1_NEG.delete(username);
+    res.json({ deleted: result.deletedCount > 0, username });
+  } catch (err) {
+    res.status(500).json({ error: 'db delete failed' });
+  }
+});
+
 app.get('/health', async (req, res) => {
   try {
     const dbState = mongoose.connection.readyState;

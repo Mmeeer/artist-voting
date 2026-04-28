@@ -1034,10 +1034,22 @@
       // the fallback; a console dump is the last resort.
       const IG_SEED_SNIPPET = `(async () => {
   const u = location.pathname.split('/').filter(Boolean)[0];
-  if (!u) { console.error('Not on an Instagram profile page'); return; }
+  if (!u) { console.error('%c❌ Open an Instagram profile page first (e.g. instagram.com/<username>/)', 'color:#f55;font-size:14px;font-weight:bold'); return; }
+  if (!/(?:^|;\\s*)sessionid=/.test(document.cookie)) {
+    console.error('%c❌ Not logged into Instagram in this browser. Posts come back empty for anonymous viewers. Log in, reload, then re-run.', 'color:#f55;font-size:14px;font-weight:bold');
+    return;
+  }
   const r = await fetch('/api/v1/users/web_profile_info/?username=' + u, { headers: { 'X-IG-App-ID': '936619743392459' } });
-  if (!r.ok) { console.error('Fetch failed:', r.status); return; }
+  if (!r.ok) { console.error('%c❌ Fetch failed: ' + r.status, 'color:#f55;font-size:14px;font-weight:bold'); return; }
   const d = await r.json();
+  const user = d?.data?.user;
+  const edges = user?.edge_owner_to_timeline_media?.edges || [];
+  const isPrivate = !!user?.is_private;
+  if (!user) { console.error('%c❌ No user object in response — Instagram may have rate-limited you.', 'color:#f55;font-size:14px;font-weight:bold'); return; }
+  if (!isPrivate && edges.length === 0) {
+    console.warn('%c⚠ 0 posts returned for @' + u + '. Instagram likely treated this request as anonymous. Try: hard-reload (Ctrl+Shift+R), confirm you see posts on the page, then re-run.', 'color:#fa0;font-size:13px;font-weight:bold');
+    if (!confirm('@' + u + ' returned 0 posts. Copy anyway?')) return;
+  }
   const text = JSON.stringify({ username: u, raw: d });
   let copied = false;
   try { copy(text); copied = true; } catch (e) {}
@@ -1048,7 +1060,7 @@
     try { copied = document.execCommand('copy'); } catch (e) {}
     document.body.removeChild(ta);
   }
-  console.log('%c✓ @' + u + ' ' + (copied ? 'copied to clipboard' : 'copy FAILED — select the JSON below and copy it manually:'), 'color:#0f0;font-size:14px;font-weight:bold');
+  console.log('%c✓ @' + u + ' (' + edges.length + ' posts' + (isPrivate ? ', private' : '') + ') ' + (copied ? 'copied to clipboard' : 'copy FAILED — select JSON below:'), 'color:#0f0;font-size:14px;font-weight:bold');
   if (!copied) console.log(text);
 })();`;
 
@@ -1081,15 +1093,37 @@
             const avatar = e.profilePic
               ? `<img src="${escapeHtml(e.profilePic)}" alt="" class="h-10 w-10 rounded-full object-cover" onerror="this.style.display='none'" />`
               : `<div class="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-lg">📸</div>`;
+            const postsClass = e.postCount === 0 ? "text-rose-400 font-semibold" : "";
             return `
               <div class="flex items-center gap-3 rounded-xl bg-white/[0.03] border border-white/5 p-3">
                 ${avatar}
                 <div class="flex-1 min-w-0">
                   <div class="truncate text-sm font-semibold">@${escapeHtml(e.username)}</div>
-                  <div class="text-xs text-slate-500">${escapeHtml(e.fullName || "—")} · ${e.postCount} posts · ${ageLabel}</div>
+                  <div class="text-xs text-slate-500">${escapeHtml(e.fullName || "—")} · <span class="${postsClass}">${e.postCount} posts</span> · ${ageLabel}</div>
                 </div>
+                <button type="button" data-ig-delete="${escapeHtml(e.username)}" class="btn-secondary btn-sm shrink-0" title="Drop cache for this profile so you can re-seed">Устгах</button>
               </div>`;
           }).join("");
+          list.querySelectorAll("[data-ig-delete]").forEach((btn) => {
+            btn.addEventListener("click", async () => {
+              const u = btn.dataset.igDelete;
+              if (!confirm(`Drop cached data for @${u}? You'll need to re-seed it.`)) return;
+              btn.disabled = true; btn.textContent = "...";
+              try {
+                const res = await apiFetch(`/admin/instagram/cached/${encodeURIComponent(u)}`, { method: "DELETE" });
+                if (res.ok) {
+                  showMessage(`Cache cleared for @${u}`, "success");
+                  loadIgCached();
+                } else {
+                  showMessage("Delete failed", "error");
+                  btn.disabled = false; btn.textContent = "Устгах";
+                }
+              } catch {
+                showMessage("Delete failed", "error");
+                btn.disabled = false; btn.textContent = "Устгах";
+              }
+            });
+          });
         } catch (err) {
           list.innerHTML = `<p class="text-sm text-rose-400">Failed to load cache list.</p>`;
         }

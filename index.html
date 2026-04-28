@@ -369,7 +369,7 @@
 
           if (section.type === "single-select" || section.type === "multi-select") {
             const grid = document.createElement("div");
-            grid.className = "grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4";
+            grid.className = "grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
             grid.id = `section-${section.id}`;
             section.options.forEach((opt) => grid.appendChild(buildOptionCard(section, opt)));
             wrapper.appendChild(grid);
